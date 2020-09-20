@@ -74,9 +74,11 @@ public:
 	time_t timestamp() const { return _timestamp; }
 	void stamp (time_t when) { _timestamp = when; }
 
-	virtual bool        empty () const = 0;
-	virtual samplecnt_t length (samplepos_t pos) const = 0;
-	virtual void        update_length (samplecnt_t cnt) = 0;
+	timecnt_t length() const;
+
+	virtual bool        empty () const;
+	virtual samplecnt_t length_samples (timepos_t const & pos) const { return _length.samples(); };
+	virtual void        update_length (timecnt_t const & cnt) {}
 
 	void                 set_take_id (std::string id) { _take_id =id; }
 	const std::string&   take_id ()        const { return _take_id; }
@@ -112,8 +114,9 @@ public:
 	XrunPositions const& captured_xruns () const { return _xruns; }
 	void set_captured_xruns (XrunPositions const& xruns) { _xruns = xruns; }
 
-	virtual samplepos_t natural_position() const { return _natural_position; }
-	virtual void set_natural_position (samplepos_t pos);
+	virtual timepos_t natural_position() const { return _natural_position; }
+	virtual void set_natural_position (timepos_t const & pos);
+
 	bool have_natural_position() const { return _have_natural_position; }
 
 	void set_allow_remove_if_empty (bool yn);
@@ -137,18 +140,19 @@ public:
 	static PBD::Signal1<void,boost::shared_ptr<ARDOUR::Source> > SourcePropertyChanged;
 
   protected:
-	DataType          _type;
-	Flag              _flags;
-	time_t            _timestamp;
-	std::string       _take_id;
-	samplepos_t       _natural_position;
-	samplepos_t       _have_natural_position;
-	bool              _analysed;
+	DataType            _type;
+	Flag                _flags;
+	time_t              _timestamp;
+	std::string         _take_id;
+	timepos_t           _natural_position;
+	bool                _have_natural_position;
+	bool                _analysed;
 	GATOMIC_QUAL gint _use_count; /* atomic */
-	uint32_t          _level; /* how deeply nested is this source w.r.t a disk file */
-	std::string       _ancestor_name;
-	std::string       _captured_for;
-	XrunPositions     _xruns;
+	uint32_t            _level; /* how deeply nested is this source w.r.t a disk file */
+	std::string         _ancestor_name;
+	std::string        _captured_for;
+	timecnt_t           _length;
+	XrunPositions      _xruns;
 
 	mutable Glib::Threads::Mutex _lock;
 	mutable Glib::Threads::Mutex _analysis_lock;

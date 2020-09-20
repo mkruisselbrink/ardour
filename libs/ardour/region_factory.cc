@@ -92,8 +92,8 @@ RegionFactory::create (boost::shared_ptr<const Region> region, bool announce, bo
 
 		ret->set_name (new_region_name (ret->name ()));
 
-		if (ret->session ().config.get_glue_new_regions_to_bars_and_beats () && ret->position_lock_style () != MusicTime) {
-			ret->set_position_lock_style (MusicTime);
+		if (ret->session().config.get_glue_new_regions_to_bars_and_beats() && ret->position_time_domain() != Temporal::BeatTime) {
+			ret->set_position_time_domain (Temporal::BeatTime);
 		}
 
 		/* pure copy constructor - no property list */
@@ -135,8 +135,8 @@ RegionFactory::create (boost::shared_ptr<Region> region, const PropertyList& pli
 
 		ret->apply_changes (plist);
 
-		if (ret->session ().config.get_glue_new_regions_to_bars_and_beats () && ret->position_lock_style () != MusicTime) {
-			ret->set_position_lock_style (MusicTime);
+		if (ret->session().config.get_glue_new_regions_to_bars_and_beats() && ret->position_time_domain() != Temporal::BeatTime) {
+			ret->set_position_time_domain (Temporal::BeatTime);
 		}
 
 		if (announce) {
@@ -176,8 +176,8 @@ RegionFactory::create (boost::shared_ptr<Region> region, timecnt_t const & offse
 		}
 		ret->apply_changes (plist);
 
-		if (ret->session ().config.get_glue_new_regions_to_bars_and_beats () && ret->position_lock_style () != MusicTime) {
-			ret->set_position_lock_style (MusicTime);
+		if (ret->session().config.get_glue_new_regions_to_bars_and_beats() && ret->position_time_domain() != Temporal::BeatTime) {
+			ret->set_position_time_domain (Temporal::BeatTime);
 		}
 
 		if (announce) {
@@ -219,8 +219,8 @@ RegionFactory::create (boost::shared_ptr<Region> region, const SourceList& srcs,
 
 		ret->apply_changes (plist);
 
-		if (ret->session ().config.get_glue_new_regions_to_bars_and_beats () && ret->position_lock_style () != MusicTime) {
-			ret->set_position_lock_style (MusicTime);
+		if (ret->session().config.get_glue_new_regions_to_bars_and_beats() && ret->position_time_domain() != Temporal::BeatTime) {
+			ret->set_position_time_domain (Temporal::BeatTime);
 		}
 
 		if (announce) {
@@ -263,8 +263,8 @@ RegionFactory::create (const SourceList& srcs, const PropertyList& plist, bool a
 
 		ret->apply_changes (plist);
 
-		if (ret->session ().config.get_glue_new_regions_to_bars_and_beats () && ret->position_lock_style () != MusicTime) {
-			ret->set_position_lock_style (MusicTime);
+		if (ret->session().config.get_glue_new_regions_to_bars_and_beats() && ret->position_time_domain() != Temporal::BeatTime) {
+			ret->set_position_time_domain (Temporal::BeatTime);
 		}
 
 		if (announce) {

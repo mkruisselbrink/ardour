@@ -330,10 +330,11 @@ Source::mark_for_remove ()
 }
 
 void
-Source::set_natural_position (samplepos_t pos)
+Source::set_natural_position (timepos_t const & pos)
 {
 	_natural_position = pos;
 	_have_natural_position = true;
+	_length.set_position (pos);
 }
 
 void
@@ -390,3 +391,16 @@ Source::writable () const
 {
         return (_flags & Writable) && _session.writable();
 }
+
+bool
+Source::empty () const
+{
+	return _length == timecnt_t();
+}
+
+timecnt_t
+Source::length() const
+{
+	return _length;
+}
+
