@@ -57,8 +57,8 @@ using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
 
-struct AudioRangeComparator {
-	bool operator()(AudioRange a, AudioRange b) {
+struct TimelineRangeComparator {
+	bool operator()(TimelineRange a, TimelineRange b) {
 		return a.start < b.start;
 	}
 };
@@ -307,11 +307,11 @@ Selection::toggle (samplepos_t start, samplepos_t end)
 {
 	clear_objects(); // enforce object/range exclusivity
 
-	AudioRangeComparator cmp;
+	TimelineRangeComparator cmp;
 
 	/* XXX this implementation is incorrect */
 
-	time.push_back (AudioRange (start, end, ++next_time_id));
+	time.push_back (TimelineRange (start, end, ++next_time_id));
 	time.consolidate ();
 	time.sort (cmp);
 
@@ -438,11 +438,11 @@ Selection::add (samplepos_t start, samplepos_t end)
 {
 	clear_objects(); // enforce object/range exclusivity
 
-	AudioRangeComparator cmp;
+	TimelineRangeComparator cmp;
 
 	/* XXX this implementation is incorrect */
 
-	time.push_back (AudioRange (start, end, ++next_time_id));
+	time.push_back (TimelineRange (start, end, ++next_time_id));
 	time.consolidate ();
 	time.sort (cmp);
 
@@ -458,7 +458,7 @@ Selection::move_time (samplecnt_t distance)
 		return;
 	}
 
-	for (list<AudioRange>::iterator i = time.begin(); i != time.end(); ++i) {
+	for (list<TimelineRange>::iterator i = time.begin(); i != time.end(); ++i) {
 		(*i).start += distance;
 		(*i).end += distance;
 	}
@@ -471,15 +471,15 @@ Selection::replace (uint32_t sid, samplepos_t start, samplepos_t end)
 {
 	clear_objects(); // enforce object/range exclusivity
 
-	for (list<AudioRange>::iterator i = time.begin(); i != time.end(); ++i) {
+	for (list<TimelineRange>::iterator i = time.begin(); i != time.end(); ++i) {
 		if ((*i).id == sid) {
 			time.erase (i);
-			time.push_back (AudioRange(start,end, sid));
+			time.push_back (TimelineRange(start,end, sid));
 
 			/* don't consolidate here */
 
 
-			AudioRangeComparator cmp;
+			TimelineRangeComparator cmp;
 			time.sort (cmp);
 
 			TimeChanged ();
@@ -599,7 +599,7 @@ Selection::remove (uint32_t selection_id)
 		return;
 	}
 
-	for (list<AudioRange>::iterator i = time.begin(); i != time.end(); ++i) {
+	for (list<TimelineRange>::iterator i = time.begin(); i != time.end(); ++i) {
 		if ((*i).id == selection_id) {
 			time.erase (i);
 
@@ -696,17 +696,17 @@ Selection::set (vector<RegionView*>& v)
  *  the list of tracks it applies to.
  */
 long
-Selection::set (samplepos_t start, samplepos_t end)
+Selection::set (timepos_t const & start, timepos_t const & end)
 {
 	clear_objects(); // enforce region/object exclusivity
 	clear_time();
 
-	if ((start == 0 && end == 0) || end < start) {
+	if ((start.zero() && end.zero()) || end < start) {
 		return 0;
 	}
 
 	if (time.empty()) {
-		time.push_back (AudioRange (start, end, ++next_time_id));
+		time.push_back (TimelineRange (start, end, ++next_time_id));
 	} else {
 		/* reuse the first entry, and remove all the rest */
 
@@ -742,9 +742,9 @@ Selection::set_preserving_all_ranges (samplepos_t start, samplepos_t end)
 	}
 
 	if (time.empty ()) {
-		time.push_back (AudioRange (start, end, ++next_time_id));
+		time.push_back (TimelineRange (start, end, ++next_time_id));
 	} else {
-		time.sort (AudioRangeComparator ());
+		time.sort (TimelineRangeComparator ());
 		time.front().start = start;
 		time.back().end = end;
 	}
@@ -1123,7 +1123,7 @@ Selection::get_state () const
 	}
 
 	for (TimeSelection::const_iterator i = time.begin(); i != time.end(); ++i) {
-		XMLNode* t = node->add_child (X_("AudioRange"));
+		XMLNode* t = node->add_child (X_("TimelineRange"));
 		t->set_property (X_("start"), (*i).start);
 		t->set_property (X_("end"), (*i).end);
 	}
@@ -1290,7 +1290,7 @@ Selection::set_state (XMLNode const & node, int)
 				}
 			}
 
-		} else if ((*i)->name() == X_("AudioRange")) {
+		} else if ((*i)->name() == X_("TimelineRange")) {
 			samplepos_t start;
 			samplepos_t end;
 
