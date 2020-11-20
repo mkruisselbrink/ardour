@@ -2273,6 +2273,8 @@ private:
 	std::string unnamed_file_name () const;
 
 	GATOMIC_QUAL gint _update_pretty_names;
+
+	void setup_thread_local_variables ();
 };
 
 
