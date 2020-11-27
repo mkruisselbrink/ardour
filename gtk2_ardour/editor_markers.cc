@@ -1444,8 +1444,7 @@ Editor::toggle_tempo_type ()
 		tmap->set_ramped (tempo, !tempo.ramped());
 
 		XMLNode &after = tmap->get_state();
-#warning NUTEMPO map object may change
-		//_session->add_command(new MementoCommand<Temporal::TempoMap>(_session->tempo_map(), &before, &after));
+		_session->add_command (new MementoCommand<Temporal::TempoMap> (new Temporal::TempoMap::MementoBinder(), &before, &after));
 		commit_reversible_command ();
 	}
 }
@@ -1467,8 +1466,7 @@ Editor::toggle_tempo_clamped ()
 		if (tempo.set_clamped (!tempo.clamped())) {
 
 			XMLNode &after = tmap->get_state();
-#warning NUTEMPO paul knows the drill by now
-			//_session->add_command(new MementoCommand<Temporal::TempoMap>(_session->tempo_map(), &before, &after));
+			_session->add_command (new MementoCommand<Temporal::TempoMap> (new Temporal::TempoMap::MementoBinder(), &before, &after));
 			commit_reversible_command ();
 		} else {
 			abort_reversible_command ();
@@ -1493,8 +1491,7 @@ Editor::ramp_to_next_tempo ()
 		Temporal::TempoPoint & tempo (tm->tempo());
 		if (tmap->set_ramped (tempo, !tempo.ramped())) {
 			XMLNode &after = tmap->get_state();
-#warning NUTEMPO see previous warning
-			// _session->add_command(new MementoCommand<Temporal::TempoMap>(_session->tempo_map(), &before, &after));
+			_session->add_command (new MementoCommand<Temporal::TempoMap> (new Temporal::TempoMap::MementoBinder(), &before, &after));
 			commit_reversible_command ();
 		} else {
 			abort_reversible_command ();
