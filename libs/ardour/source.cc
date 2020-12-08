@@ -397,10 +397,3 @@ Source::empty () const
 {
 	return _length == timecnt_t();
 }
-
-timecnt_t
-Source::length() const
-{
-	return _length;
-}
-
