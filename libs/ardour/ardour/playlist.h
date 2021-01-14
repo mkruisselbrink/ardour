@@ -274,7 +274,10 @@ protected:
 
 protected:
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> Revert "NO-OP: code formatting and cleanup, thanks clang-format"
 	class ThawList : public RegionList {
 		public:
 			void add (boost::shared_ptr<Region> r)
