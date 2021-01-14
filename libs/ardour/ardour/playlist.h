@@ -27,35 +27,35 @@
 #ifndef __ardour_playlist_h__
 #define __ardour_playlist_h__
 
+#include <string>
+#include <set>
+#include <map>
+#include <list>
+#include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
-#include <list>
-#include <map>
-#include <set>
-#include <string>
 
 #include <sys/stat.h>
 
 #include <glib.h>
 
-#include "pbd/sequence_property.h"
-#include "pbd/stacktrace.h"
+#include "pbd/undo.h"
 #include "pbd/stateful.h"
 #include "pbd/statefuldestructible.h"
 #include "pbd/undo.h"
 #include "pbd/g_atomic_compat.h"
+#include "pbd/sequence_property.h"
 
 #include "evoral/Range.h"
 
 #include "ardour/ardour.h"
-#include "ardour/data_type.h"
 #include "ardour/region.h"
 #include "ardour/session_object.h"
 #include "ardour/thawlist.h"
+#include "ardour/data_type.h"
 
-namespace ARDOUR {
+namespace ARDOUR  {
 
 class Session;
 class Playlist;
@@ -73,22 +73,22 @@ class LIBARDOUR_API RegionListProperty : public PBD::SequenceProperty<std::list<
 public:
 	RegionListProperty (Playlist&);
 
-	RegionListProperty*       clone () const;
-	void                      get_content_as_xml (boost::shared_ptr<Region>, XMLNode&) const;
-	boost::shared_ptr<Region> get_content_from_xml (XMLNode const&) const;
+	RegionListProperty* clone () const;
+	void get_content_as_xml (boost::shared_ptr<Region>, XMLNode &) const;
+	boost::shared_ptr<Region> get_content_from_xml (XMLNode const &) const;
 
 private:
 	RegionListProperty* create () const;
 
 	/* copy construction only by ourselves */
-	RegionListProperty (RegionListProperty const& p);
+	RegionListProperty (RegionListProperty const & p);
 
 	friend class Playlist;
 	/* we live and die with our playlist, no lifetime management needed */
 	Playlist& _playlist;
 };
 
-class LIBARDOUR_API Playlist : public SessionObject, public boost::enable_shared_from_this<Playlist>
+class LIBARDOUR_API Playlist : public SessionObject , public boost::enable_shared_from_this<Playlist>
 {
 public:
 	static void make_property_quarks ();
@@ -108,42 +108,45 @@ public:
 
 	uint32_t max_source_level () const;
 
-	bool set_name (const std::string& str);
 	void set_region_ownership ();
 
-	virtual void clear (bool with_signals = true);
+	virtual void clear (bool with_signals=true);
 	virtual void dump () const;
 
-	void use ();
-	void release ();
+	void use();
+	void release();
+	bool used () const { return _refcnt != 0; }
 
-	bool            empty () const;
-	bool            used () const          { return _refcnt != 0; }
-	int             sort_id () const       { return _sort_id; }
-	bool            frozen () const        { return _frozen; }
-	const DataType& data_type () const     { return _type; }
-	bool            hidden () const        { return _hidden; }
-	bool            shared () const        { return !_shared_with_ids.empty (); }
-	EditMode        get_edit_mode () const { return _edit_mode; }
+	bool set_name (const std::string& str);
+	int sort_id() { return _sort_id; }
 
+	const DataType& data_type() const { return _type; }
+
+	bool frozen() const { return _frozen; }
 	void set_frozen (bool yn);
-	void set_edit_mode (EditMode);
 
-	void AddToSoloSelectedList (const Region*);
-	void RemoveFromSoloSelectedList (const Region*);
-	bool SoloSelectedListIncludes (const Region*);
-	bool SoloSelectedActive ();
+	void AddToSoloSelectedList(const Region*);
+	void RemoveFromSoloSelectedList(const Region*);
+	bool SoloSelectedListIncludes(const Region*);
+	bool SoloSelectedActive();
 
+	bool hidden() const { return _hidden; }
+	bool empty() const;
+
+	bool shared () const { return !_shared_with_ids.empty(); }
 	void share_with (const PBD::ID&);
 	void unshare_with (const PBD::ID&);
 	bool shared_with (const PBD::ID&) const;
 	void reset_shares ();
 
-	uint32_t                            n_regions () const;
-	bool                                all_regions_empty () const;
+	uint32_t n_regions() const;
+	bool all_regions_empty() const;
 	std::pair<samplepos_t, samplepos_t> get_extent () const;
-	std::pair<samplepos_t, samplepos_t> get_extent_with_endspace () const;
-	layer_t                             top_layer () const;
+	std::pair<samplepos_t, samplepos_t> get_extent_with_endspace() const;
+	layer_t top_layer() const;
+
+	EditMode get_edit_mode() const { return _edit_mode; }
+	void set_edit_mode (EditMode);
 
 	/* Editing operations */
 
@@ -163,34 +166,27 @@ public:
 	void duplicate_range (AudioRange&, float times);
 	void duplicate_ranges (std::list<AudioRange>&, float times);
 	void nudge_after (samplepos_t start, samplecnt_t distance, bool forwards);
+	boost::shared_ptr<Region> combine (const RegionList&);
+	void uncombine (boost::shared_ptr<Region>);
 	void fade_range (std::list<AudioRange>&);
 
-	boost::shared_ptr<Region> combine (const RegionList&);
-	void                      uncombine (boost::shared_ptr<Region>);
-
 	void shuffle (boost::shared_ptr<Region>, int dir);
-	void ripple (samplepos_t at, samplecnt_t distance, RegionList* exclude);
-	void ripple (samplepos_t at, samplecnt_t distance, boost::shared_ptr<Region> exclude)
-	{
-		RegionList el;
-		if (exclude) {
-			el.push_back (exclude);
-		}
-		ripple (at, distance, &el);
+	void ripple (samplepos_t at, samplecnt_t distance, RegionList *exclude);
+	void ripple (samplepos_t at, samplecnt_t distance, boost::shared_ptr<Region> exclude) {
+		 RegionList el;
+		 if (exclude)
+			 el.push_back (exclude);
+		 ripple (at, distance, &el);
 	}
 
 	void update_after_tempo_map_change ();
 
-	boost::shared_ptr<Playlist> cut (std::list<AudioRange>&, bool result_is_hidden = true);
+	boost::shared_ptr<Playlist> cut  (std::list<AudioRange>&, bool result_is_hidden = true);
 	boost::shared_ptr<Playlist> copy (std::list<AudioRange>&, bool result_is_hidden = true);
 	int                         paste (boost::shared_ptr<Playlist>, samplepos_t position, float times, const int32_t sub_num);
 
-	const RegionListProperty& region_list_property () const
-	{
-		return regions;
-	}
-
-	boost::shared_ptr<RegionList> region_list ();
+	const RegionListProperty& region_list_property () const { return regions; }
+	boost::shared_ptr<RegionList> region_list();
 
 	boost::shared_ptr<RegionList> regions_at (samplepos_t sample);
 	uint32_t                      count_regions_at (samplepos_t) const;
@@ -202,40 +198,40 @@ public:
 	boost::shared_ptr<RegionList> regions_touched (samplepos_t start, samplepos_t end);
 	boost::shared_ptr<RegionList> regions_with_start_within (Evoral::Range<samplepos_t>);
 	boost::shared_ptr<RegionList> regions_with_end_within (Evoral::Range<samplepos_t>);
-	uint32_t                      region_use_count (boost::shared_ptr<Region>) const;
-	boost::shared_ptr<Region>     find_region (const PBD::ID&) const;
-	boost::shared_ptr<Region>     top_region_at (samplepos_t sample);
-	boost::shared_ptr<Region>     top_unmuted_region_at (samplepos_t sample);
-	boost::shared_ptr<Region>     find_next_region (samplepos_t sample, RegionPoint point, int dir);
-	samplepos_t                   find_next_region_boundary (samplepos_t sample, int dir);
-	bool                          region_is_shuffle_constrained (boost::shared_ptr<Region>);
-	bool                          has_region_at (samplepos_t const) const;
+	uint32_t                   region_use_count (boost::shared_ptr<Region>) const;
+	boost::shared_ptr<Region>  find_region (const PBD::ID&) const;
+	boost::shared_ptr<Region>  top_region_at (samplepos_t sample);
+	boost::shared_ptr<Region>  top_unmuted_region_at (samplepos_t sample);
+	boost::shared_ptr<Region>  find_next_region (samplepos_t sample, RegionPoint point, int dir);
+	samplepos_t                find_next_region_boundary (samplepos_t sample, int dir);
+	bool                       region_is_shuffle_constrained (boost::shared_ptr<Region>);
+	bool                       has_region_at (samplepos_t const) const;
 
 	bool uses_source (boost::shared_ptr<const Source> src, bool shallow = false) const;
 	void deep_sources (std::set<boost::shared_ptr<Source> >&) const;
 
 	samplepos_t find_next_transient (samplepos_t position, int dir);
 
-	void foreach_region (boost::function<void(boost::shared_ptr<Region>)>);
+	void foreach_region (boost::function<void (boost::shared_ptr<Region>)>);
 
-	XMLNode&    get_state ();
+	XMLNode& get_state ();
 	virtual int set_state (const XMLNode&, int version);
-	XMLNode&    get_template ();
+	XMLNode& get_template ();
 
-	PBD::Signal1<void, bool>                     InUse;
-	PBD::Signal0<void>                           ContentsChanged;
-	PBD::Signal1<void, boost::weak_ptr<Region> > RegionAdded;
-	PBD::Signal1<void, boost::weak_ptr<Region> > RegionRemoved;
-	PBD::Signal0<void>                           NameChanged;
-	PBD::Signal0<void>                           LayeringChanged;
+	PBD::Signal1<void,bool> InUse;
+	PBD::Signal0<void>      ContentsChanged;
+	PBD::Signal1<void,boost::weak_ptr<Region> > RegionAdded;
+	PBD::Signal1<void,boost::weak_ptr<Region> > RegionRemoved;
+	PBD::Signal0<void>      NameChanged;
+	PBD::Signal0<void>      LayeringChanged;
 
 	/** Emitted when regions have moved (not when regions have only been trimmed) */
-	PBD::Signal2<void, std::list<Evoral::RangeMove<samplepos_t> > const&, bool> RangesMoved;
+	PBD::Signal2<void,std::list< Evoral::RangeMove<samplepos_t> > const &, bool> RangesMoved;
 
 	/** Emitted when regions are extended; the ranges passed are the new extra time ranges
 	    that these regions now occupy.
 	*/
-	PBD::Signal1<void, std::list<Evoral::Range<samplepos_t> > const&> RegionsExtended;
+	PBD::Signal1<void,std::list< Evoral::Range<samplepos_t> > const &> RegionsExtended;
 
 	static std::string bump_name (std::string old_name, Session&);
 
@@ -247,8 +243,8 @@ public:
 	void raise_region_to_top (boost::shared_ptr<Region>);
 	void lower_region_to_bottom (boost::shared_ptr<Region>);
 
-	void set_orig_track_id (const PBD::ID& did);
 	const PBD::ID& get_orig_track_id () const { return _orig_track_id; }
+	void set_orig_track_id (const PBD::ID& did);
 
 	/* destructive editing */
 
@@ -262,16 +258,12 @@ public:
 
 	void drop_regions ();
 
-	virtual boost::shared_ptr<Crossfade> find_crossfade (const PBD::ID&) const
-	{
+	virtual boost::shared_ptr<Crossfade> find_crossfade (const PBD::ID &) const {
 		return boost::shared_ptr<Crossfade> ();
 	}
 
 	samplepos_t find_next_top_layer_position (samplepos_t) const;
-	uint32_t    combine_ops () const
-	{
-		return _combine_ops;
-	}
+	uint32_t combine_ops() const { return _combine_ops; }
 
 	void set_layer (boost::shared_ptr<Region>, double);
 
@@ -281,15 +273,33 @@ protected:
 	friend class Session;
 
 protected:
+<<<<<<< HEAD
+=======
+	class ThawList : public RegionList {
+		public:
+			void add (boost::shared_ptr<Region> r)
+			{
+				if (std::find (begin(), end(), r) != end ()) {
+					return;
+				}
+				r->suspend_property_changes ();
+				push_back (r);
+			}
 
-	class RegionReadLock : public Glib::Threads::RWLock::ReaderLock
-	{
-	public:
-		RegionReadLock (Playlist* pl)
-		    : Glib::Threads::RWLock::ReaderLock (pl->region_lock)
-		{
-		}
-		~RegionReadLock () {}
+			void release ()
+			{
+				for (RegionList::iterator i = begin(); i != end(); ++i) {
+					(*i)->resume_property_changes ();
+				}
+				clear ();
+			}
+	};
+>>>>>>> Revert "NO-OP: code formatting and cleanup, thanks clang-format"
+
+	class RegionReadLock : public Glib::Threads::RWLock::ReaderLock {
+		public:
+			RegionReadLock (Playlist *pl) : Glib::Threads::RWLock::ReaderLock (pl->region_lock) {}
+			~RegionReadLock() {}
 	};
 
 	class RegionWriteLock : public Glib::Threads::RWLock::WriterLock
@@ -314,12 +324,12 @@ protected:
 			}
 		}
 
-		ThawList  thawlist;
-		Playlist* playlist;
-		bool      block_notify;
+		ThawList thawlist;
+		Playlist *playlist;
+		bool block_notify;
 	};
 
-	RegionListProperty                   regions;     /* the current list of regions in the playlist */
+	RegionListProperty   regions;  /* the current list of regions in the playlist */
 	std::set<boost::shared_ptr<Region> > all_regions; /* all regions ever added to this playlist */
 	PBD::ScopedConnectionList            region_state_changed_connections;
 	PBD::ScopedConnectionList            region_drop_references_connections;
@@ -329,52 +339,49 @@ protected:
 	mutable GATOMIC_QUAL gint            ignore_state_changes;
 	std::set<boost::shared_ptr<Region> > pending_adds;
 	std::set<boost::shared_ptr<Region> > pending_removes;
-	RegionList                           pending_bounds;
-	bool                                 pending_contents_change;
-	bool                                 pending_layering;
+	RegionList       pending_bounds;
+	bool             pending_contents_change;
+	bool             pending_layering;
 
-	std::set<const Region*> _soloSelectedRegions;
+	std::set<const Region*>   _soloSelectedRegions;
 
 	/** Movements of time ranges caused by region moves; note that
 	 *  region trims are not included in this list; it is used to
 	 *  do automation-follows-regions.
 	 */
-	std::list<Evoral::RangeMove<samplepos_t> > pending_range_moves;
-
+	std::list< Evoral::RangeMove<samplepos_t> > pending_range_moves;
 	/** Extra sections added to regions during trims */
-	std::list<Evoral::Range<samplepos_t> > pending_region_extensions;
-
-	uint32_t           in_set_state;
-	bool               in_undo;
-	bool               first_set_state;
-	bool               _hidden;
-	bool               _splicing;
-	bool               _rippling;
-	bool               _shuffling;
-	bool               _nudging;
-	uint32_t           _refcnt;
-	EditMode           _edit_mode;
-	bool               in_flush;
-	bool               in_partition;
-	bool               _frozen;
-	bool               _capture_insertion_underway;
-	uint32_t           subcnt;
-	PBD::ID            _orig_track_id;
-	uint32_t           _combine_ops;
+	std::list< Evoral::Range<samplepos_t> >     pending_region_extensions;
+	uint32_t         in_set_state;
+	bool             in_undo;
+	bool             first_set_state;
+	bool            _hidden;
+	bool            _splicing;
+	bool            _rippling;
+	bool            _shuffling;
+	bool            _nudging;
+	uint32_t        _refcnt;
+	EditMode        _edit_mode;
+	bool             in_flush;
+	bool             in_partition;
+	bool            _frozen;
+	bool            _capture_insertion_underway;
+	uint32_t         subcnt;
+	PBD::ID         _orig_track_id;
+	uint32_t        _combine_ops;
 	std::list<PBD::ID> _shared_with_ids;
 
 	void init (bool hide);
 
-	bool holding_state () const
-	{
+	bool holding_state () const {
 		return g_atomic_int_get (&block_notifications) != 0 ||
-		       g_atomic_int_get (&ignore_state_changes) != 0;
+			g_atomic_int_get (&ignore_state_changes) != 0;
 	}
 
-	void         delay_notifications ();
-	void         release_notifications (bool from_undo = false);
+	void delay_notifications ();
+	void release_notifications (bool from_undo = false);
 	virtual void flush_notifications (bool from_undo = false);
-	void         clear_pending ();
+	void clear_pending ();
 
 	void _set_sort_id ();
 
@@ -389,9 +396,9 @@ protected:
 	void notify_region_start_trimmed (boost::shared_ptr<Region>);
 	void notify_region_end_trimmed (boost::shared_ptr<Region>);
 
-	void mark_session_dirty ();
+	void mark_session_dirty();
 
-	void         region_changed_proxy (const PBD::PropertyChange&, boost::weak_ptr<Region>);
+	void region_changed_proxy (const PBD::PropertyChange&, boost::weak_ptr<Region>);
 	virtual bool region_changed (const PBD::PropertyChange&, boost::shared_ptr<Region>);
 
 	void region_bounds_changed (const PBD::PropertyChange&, boost::shared_ptr<Region>);
@@ -399,14 +406,14 @@ protected:
 
 	void sort_regions ();
 
-	void possibly_splice (samplepos_t at, samplecnt_t distance, boost::shared_ptr<Region> exclude = boost::shared_ptr<Region> ());
+	void possibly_splice (samplepos_t at, samplecnt_t distance, boost::shared_ptr<Region> exclude = boost::shared_ptr<Region>());
 	void possibly_splice_unlocked (samplepos_t at, samplecnt_t distance, boost::shared_ptr<Region> exclude, ThawList& thawlist);
 
 	void splice_locked (samplepos_t at, samplecnt_t distance, boost::shared_ptr<Region> exclude);
 	void splice_unlocked (samplepos_t at, samplecnt_t distance, boost::shared_ptr<Region> exclude, ThawList& thawlist);
 
-	void ripple_locked (samplepos_t at, samplecnt_t distance, RegionList* exclude);
-	void ripple_unlocked (samplepos_t at, samplecnt_t distance, RegionList* exclude, ThawList& thawlist);
+	void ripple_locked (samplepos_t at, samplecnt_t distance, RegionList *exclude);
+	void ripple_unlocked (samplepos_t at, samplecnt_t distance, RegionList *exclude, ThawList& thawlist);
 
 	virtual void remove_dependents (boost::shared_ptr<Region> /*region*/) {}
 	virtual void region_going_away (boost::weak_ptr<Region> /*region*/) {}
@@ -415,14 +422,14 @@ protected:
 
 	bool add_region_internal (boost::shared_ptr<Region>, samplepos_t position, ThawList& thawlist, int32_t sub_num = 0, double quarter_note = 0.0, bool for_music = false);
 
-	int  remove_region_internal (boost::shared_ptr<Region>, ThawList& thawlist);
+	int remove_region_internal (boost::shared_ptr<Region>, ThawList& thawlist);
 	void copy_regions (RegionList&) const;
 	void partition_internal (samplepos_t start, samplepos_t end, bool cutting, ThawList& thawlist);
 
-	std::pair<samplepos_t, samplepos_t> _get_extent () const;
+	std::pair<samplepos_t, samplepos_t> _get_extent() const;
 
-	boost::shared_ptr<Playlist> cut_copy (boost::shared_ptr<Playlist> (Playlist::*pmf) (samplepos_t, samplecnt_t, bool),
-	                                      std::list<AudioRange>& ranges, bool result_is_hidden);
+	boost::shared_ptr<Playlist> cut_copy (boost::shared_ptr<Playlist> (Playlist::*pmf)(samplepos_t, samplecnt_t, bool),
+					      std::list<AudioRange>& ranges, bool result_is_hidden);
 	boost::shared_ptr<Playlist> cut (samplepos_t start, samplecnt_t cnt, bool result_is_hidden);
 	boost::shared_ptr<Playlist> copy (samplepos_t start, samplecnt_t cnt, bool result_is_hidden);
 
@@ -440,26 +447,24 @@ protected:
 	/* this is called before we create a new compound region */
 	virtual void post_combine (std::vector<boost::shared_ptr<Region> >&, boost::shared_ptr<Region>) {}
 	/* this is called before we remove a compound region and replace it
-	 * with its constituent regions
-	 */
+	   with its constituent regions
+	*/
 	virtual void pre_uncombine (std::vector<boost::shared_ptr<Region> >&, boost::shared_ptr<Region>) {}
 
 private:
 	friend class RegionReadLock;
 	friend class RegionWriteLock;
-
 	mutable Glib::Threads::RWLock region_lock;
 
 private:
-	void setup_layering_indices (RegionList const&);
+	void setup_layering_indices (RegionList const &);
 	void coalesce_and_check_crossfades (std::list<Evoral::Range<samplepos_t> >);
-
 	boost::shared_ptr<RegionList> find_regions_at (samplepos_t);
 
 	mutable boost::optional<std::pair<samplepos_t, samplepos_t> > _cached_extent;
 
-	samplepos_t _end_space; //this is used when we are pasting a range with extra space at the end
-	bool        _playlist_shift_active;
+	samplepos_t _end_space;  //this is used when we are pasting a range with extra space at the end
+	bool _playlist_shift_active;
 };
 
 } /* namespace ARDOUR */
