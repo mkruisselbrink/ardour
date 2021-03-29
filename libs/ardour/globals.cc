@@ -863,7 +863,8 @@ ARDOUR::get_available_sync_options ()
  * since an arbitrary zero origin.
  */
 
-#ifdef __MACH__
+#ifdef __APPLE__
+#if __MAC_OS_X_VERSION_MAX_ALLOWED < __MAC_10_12
 /* Thanks Apple for not implementing this basic SUSv2, POSIX.1-2001 function
  */
 #include <mach/mach_time.h>
@@ -886,6 +887,7 @@ clock_gettime (int /*clk_id*/, struct timespec* t)
 	t->tv_nsec      = nseconds;
 	return 0;
 }
+#endif
 #endif
 
 microseconds_t
