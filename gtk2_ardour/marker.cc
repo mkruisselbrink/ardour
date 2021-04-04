@@ -567,7 +567,7 @@ ArdourMarker::set_right_label_limit (double p)
 TempoMarker::TempoMarker (PublicEditor& editor, ArdourCanvas::Item& parent, guint32 rgba, const string& text,
                           Temporal::TempoPoint& temp)
 	: ArdourMarker (editor, parent, rgba, text, Tempo, temp.time(), false)
-	, _tempo (temp)
+	, _tempo (&temp)
 {
 	group->Event.connect (sigc::bind (sigc::mem_fun (editor, &PublicEditor::canvas_tempo_marker_event), group, this));
 }
@@ -599,7 +599,7 @@ TempoMarker::update_height_mark (const double ratio)
 void
 TempoMarker::reset_tempo (Temporal::TempoPoint & t)
 {
-	_tempo = t;
+	_tempo = &t;
 }
 
 
@@ -607,7 +607,7 @@ TempoMarker::reset_tempo (Temporal::TempoPoint & t)
 
 MeterMarker::MeterMarker (PublicEditor& editor, ArdourCanvas::Item& parent, guint32 rgba, const string& text, Temporal::MeterPoint& m)
 	: ArdourMarker (editor, parent, rgba, text, Meter, m.time(), false)
-	, _meter (m)
+	, _meter (&m)
 {
 	group->Event.connect (sigc::bind (sigc::mem_fun (editor, &PublicEditor::canvas_meter_marker_event), group, this));
 }
@@ -619,14 +619,14 @@ MeterMarker::~MeterMarker ()
 void
 MeterMarker::reset_meter (Temporal::MeterPoint & m)
 {
-	_meter = m;
+	_meter = &m;
 }
 
 /***********************************************************************/
 
 BBTMarker::BBTMarker (PublicEditor& editor, ArdourCanvas::Item& parent, guint32 rgba, const string& text, Temporal::MusicTimePoint& p)
 	: ArdourMarker (editor, parent, rgba, text, BBTPosition, p.time(), false)
-	, _point (p)
+	, _point (&p)
 {
 	group->Event.connect (sigc::bind (sigc::mem_fun (editor, &PublicEditor::canvas_bbt_marker_event), group, this));
 }
@@ -638,5 +638,5 @@ BBTMarker::~BBTMarker ()
 void
 BBTMarker::reset_point (Temporal::MusicTimePoint & p)
 {
-	_point = p;
+	_point = &p;
 }
