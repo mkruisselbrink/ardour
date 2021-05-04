@@ -3076,14 +3076,10 @@ Playlist::combine (const RegionList& r)
 
 	ThawList                           thawlist;
 	PropertyList                       plist;
-	uint32_t                           channels          = 0;
+	SourceList::size_type              channels          = 0;
 	uint32_t                           layer             = 0;
 	timepos_t                          earliest_position = std::numeric_limits<timepos_t>::max();
 	vector<TwoRegions>                 old_and_new_regions;
-	PropertyList plist;
-	SourceList::size_type channels = 0;
-	uint32_t layer = 0;
-	vector<TwoRegions> old_and_new_regions;
 	vector<boost::shared_ptr<Region> > originals;
 	vector<boost::shared_ptr<Region> > copies;
 	string parent_name;
@@ -3133,8 +3129,7 @@ Playlist::combine (const RegionList& r)
 
 		/* make position relative to zero */
 
-		pl->add_region (copied_region, original_region->position().earlier (timecnt_t (earliest_position, earliest_position)), &thawlist);
-		copied_region->set_layer (original_region->layer ());
+		pl->add_region_internal (copied_region, original_region->position().earlier (timecnt_t (earliest_position, earliest_position)), thawlist);
 
 		/* use the maximum number of channels for any region */
 

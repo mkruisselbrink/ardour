@@ -273,32 +273,6 @@ protected:
 	friend class Session;
 
 protected:
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> Revert "NO-OP: code formatting and cleanup, thanks clang-format"
-	class ThawList : public RegionList {
-		public:
-			void add (boost::shared_ptr<Region> r)
-			{
-				if (std::find (begin(), end(), r) != end ()) {
-					return;
-				}
-				r->suspend_property_changes ();
-				push_back (r);
-			}
-
-			void release ()
-			{
-				for (RegionList::iterator i = begin(); i != end(); ++i) {
-					(*i)->resume_property_changes ();
-				}
-				clear ();
-			}
-	};
->>>>>>> Revert "NO-OP: code formatting and cleanup, thanks clang-format"
-
 	class RegionReadLock : public Glib::Threads::RWLock::ReaderLock {
 		public:
 			RegionReadLock (Playlist *pl) : Glib::Threads::RWLock::ReaderLock (pl->region_lock) {}
