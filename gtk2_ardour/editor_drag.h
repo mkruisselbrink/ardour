@@ -385,8 +385,6 @@ public:
 	virtual void finished (GdkEvent *, bool);
 	virtual void aborted (bool);
 
-	virtual void collect_views () {}
-
 	/** @return true if the regions being `moved' came from somewhere on the canvas;
 	 *  false if they came from outside (e.g. from the region list).
 	 */
@@ -396,6 +394,7 @@ protected:
 
 	double compute_x_delta (GdkEvent const *, ARDOUR::MusicSample *);
 	virtual bool y_movement_allowed (int, double, int skip_invisible = 0) const;
+	void collect_ripple_views ();
 
 	bool _brushing;
 	bool _ignore_video_lock;
@@ -403,6 +402,7 @@ protected:
 	double _total_x_delta;
 	int _last_pointer_time_axis_view;
 	double _last_pointer_layer;
+
 private:
 	uint32_t _ndropzone;
 	uint32_t _pdropzone;
@@ -494,20 +494,6 @@ public:
 	}
 };
 
-/** Region drag in ripple mode */
-
-class RegionRippleDrag : public RegionMoveDrag
-{
-public:
-	RegionRippleDrag (Editor *, ArdourCanvas::Item *, RegionView *, std::list<RegionView*> const &, bool copy);
-
-	void collect_views ();
-
-protected:
-	bool y_movement_allowed (int delta_track, double delta_layer, int skip_invisible = 0) const;
-};
-
-/** "Drag" to cut a region (action only on button release) */
 class RegionCutDrag : public Drag
 {
 public:

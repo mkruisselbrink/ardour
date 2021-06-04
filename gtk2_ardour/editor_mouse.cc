@@ -1062,11 +1062,11 @@ Editor::button_press_handler_1 (ArdourCanvas::Item* item, GdkEvent* event, ItemT
 
 				/* click on a normal region view */
 				if (ArdourKeyboard::indicates_copy (event->button.state)) {
-					add_region_copy_drag (item, event, clicked_regionview);
+					add_region_drag (item, event, clicked_regionview, true);
 				} else if (Keyboard::the_keyboard().key_is_down (GDK_b)) {
 					add_region_brush_drag (item, event, clicked_regionview);
 				} else {
-					add_region_drag (item, event, clicked_regionview);
+					add_region_drag (item, event, clicked_regionview, false);
 				}
 
 
@@ -1328,9 +1328,9 @@ Editor::button_press_handler_2 (ArdourCanvas::Item* item, GdkEvent* event, ItemT
 		switch (item_type) {
 		case RegionItem:
 			if (ArdourKeyboard::indicates_copy (event->button.state)) {
-				add_region_copy_drag (item, event, clicked_regionview);
+				add_region_drag (item, event, clicked_regionview, true);
 			} else {
-				add_region_drag (item, event, clicked_regionview);
+				add_region_drag (item, event, clicked_regionview, false);
 			}
 			_drags->start_grab (event);
 			return true;
@@ -2566,7 +2566,7 @@ Editor::track_height_step_timeout ()
 }
 
 void
-Editor::add_region_drag (ArdourCanvas::Item* item, GdkEvent*, RegionView* region_view)
+Editor::add_region_drag (ArdourCanvas::Item* item, GdkEvent*, RegionView* region_view, bool copy)
 {
 	assert (region_view);
 
@@ -2574,39 +2574,11 @@ Editor::add_region_drag (ArdourCanvas::Item* item, GdkEvent*, RegionView* region
 		return;
 	}
 
-	switch (Config->get_edit_mode()) {
-	case Lock:
-		return;
-	case Ripple:
-	case RippleAll:
-		_drags->add (new RegionRippleDrag (this, item, region_view, selection->regions.by_layer(), false));
-		break;
-	default:
-		_drags->add (new RegionMoveDrag (this, item, region_view, selection->regions.by_layer(), false, false));
-		break;
-	}
-}
-
-void
-Editor::add_region_copy_drag (ArdourCanvas::Item* item, GdkEvent*, RegionView* region_view)
-{
-	assert (region_view);
-
-	if (!region_view->region()->playlist()) {
+	if (Config->get_edit_mode() == Lock) {
 		return;
 	}
 
-	switch (Config->get_edit_mode()) {
-	case Lock:
-		return;
-	case Ripple:
-	case RippleAll:
-		_drags->add (new RegionRippleDrag (this, item, region_view, selection->regions.by_layer(), true));
-		break;
-	default:
-		_drags->add (new RegionMoveDrag (this, item, region_view, selection->regions.by_layer(), false, true));
-		break;
-	}
+	_drags->add (new RegionMoveDrag (this, item, region_view, selection->regions.by_layer(), false, copy));
 }
 
 void
