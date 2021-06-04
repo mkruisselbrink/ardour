@@ -1621,7 +1621,7 @@ RegionMoveDrag::finished_copy (bool const changed_position, bool const /*changed
 	typedef map<boost::shared_ptr<Playlist>, RouteTimeAxisView*> PlaylistMapping;
 	PlaylistMapping playlist_mapping;
 
-	/* insert the regions into their new playlists */
+	/* insert the regions into their (potentially) new (or existing) playlists */
 	for (list<DraggingView>::const_iterator i = _views.begin(); i != _views.end();) {
 
 		RouteTimeAxisView* dest_rtv = 0;
