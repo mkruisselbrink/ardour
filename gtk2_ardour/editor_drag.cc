@@ -710,8 +710,8 @@ RegionMotionDrag::start_grab (GdkEvent* event, Gdk::Cursor* cursor)
 		_ignore_video_lock = true;
 	}
 
-	if (_brushing) {
-		/* cross track dragging seems broken here. disabled for now. */
+	if (_brushing || _editor->should_ripple()) {
+		/* we do not drag across tracks when rippling or brushing */
 		_y_constrained = true;
 	}
 }
