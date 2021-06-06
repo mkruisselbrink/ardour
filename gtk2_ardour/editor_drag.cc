@@ -1403,6 +1403,7 @@ RegionMoveDrag::motion (GdkEvent* event, bool first_move)
 		} else if (_brushing) {
 			_editor->begin_reversible_command (Operations::drag_region_brush);
 		}
+
 		/* duplicate the regionview(s) and region(s) */
 
 		list<DraggingView> new_regionviews;
