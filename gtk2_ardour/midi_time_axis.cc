@@ -84,6 +84,7 @@
 #include "keyboard.h"
 #include "midi_channel_selector.h"
 #include "midi_scroomer.h"
+#include "midi_score_time_axis.h"
 #include "midi_streamview.h"
 #include "midi_region_view.h"
 #include "midi_time_axis.h"
@@ -302,6 +303,9 @@ MidiTimeAxisView::set_route (boost::shared_ptr<Route> rt)
 			create_automation_child (parameter, string_to<bool> (visible));
 		}
 	}
+
+	add_child (boost::shared_ptr<MidiScoreTimeAxisView>(
+		new MidiScoreTimeAxisView (_session, _route, _editor, *this, parent_canvas)));
 }
 
 void
