@@ -21,9 +21,10 @@
 
 #include "time_axis_view.h"
 
-namespace ARDOUR {
-	class Session;
-	class Stripable;
+namespace ARDOUR
+{
+class Session;
+class Stripable;
 }
 
 class MidiScoreHeader;
@@ -33,26 +34,22 @@ class PublicEditor;
 class MidiScoreTimeAxisView : public TimeAxisView
 {
 public:
-	MidiScoreTimeAxisView (ARDOUR::Session*,
-	                       boost::shared_ptr<ARDOUR::Stripable>,
-	                       PublicEditor&,
-	                       TimeAxisView& parent,
-	                       ArdourCanvas::Canvas&);
-	~MidiScoreTimeAxisView () override;
+	MidiScoreTimeAxisView (ARDOUR::Session *, boost::shared_ptr<ARDOUR::Stripable>, PublicEditor &,
+	                       TimeAxisView &parent, ArdourCanvas::Canvas &);
+	~MidiScoreTimeAxisView() override;
 
-	void set_height(uint32_t, TrackHeightMode m = OnlySelf, bool from_idle = false) override;
-	Gdk::Color color () const override;
-	boost::shared_ptr<ARDOUR::Stripable> stripable () const override;
-	std::string state_id () const override;
+	void set_height (uint32_t, TrackHeightMode m = OnlySelf, bool from_idle = false) override;
+	Gdk::Color color() const override;
+	boost::shared_ptr<ARDOUR::Stripable> stripable() const override;
+	std::string state_id() const override;
 
 private:
 	boost::shared_ptr<ARDOUR::Stripable> _stripable;
 	bool _first_call_to_set_height = true;
 
 	// Draws the clef, key signature, and first part of lines.
-	MidiScoreStreamView* _view = nullptr;
-	MidiScoreHeader* _header = nullptr;
-
+	MidiScoreStreamView *_view = nullptr;
+	MidiScoreHeader *_header = nullptr;
 };
 
 #endif /* __gtk_ardour_midi_score_time_axis_h__ */

@@ -1,0 +1,9 @@
+BasedOnStyle: GNU
+AccessModifierOffset: -8
+AllowShortFunctionsOnASingleLine: Empty
+BreakBeforeBraces: Linux
+ColumnLimit: 119
+IndentWidth: 8
+NamespaceIndentation: Inner
+SpaceBeforeParens: NonEmptyParentheses
+UseTab: AlignWithSpaces

@@ -29,9 +29,7 @@
 #include "route_time_axis.h"
 
 MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
-	: StreamView (*dynamic_cast<RouteTimeAxisView *>(tv.get_parent()),
-	              tv.canvas_display())
-	, _time_axis_view(tv)
+    : StreamView (*dynamic_cast<RouteTimeAxisView *> (tv.get_parent()), tv.canvas_display()), _time_axis_view (tv)
 {
 	_bar_lines = new ArdourCanvas::LineSet (_canvas_group, ArdourCanvas::LineSet::Horizontal);
 	_bar_lines->lower_to_bottom();
@@ -40,45 +38,40 @@ MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
 	color_handler();
 }
 
-MidiScoreStreamView::~MidiScoreStreamView ()
+MidiScoreStreamView::~MidiScoreStreamView()
 {
 	delete _bar_lines;
 }
 
 void
-MidiScoreStreamView::redisplay_track ()
+MidiScoreStreamView::redisplay_track()
 {
 	// Add and display region views, and flag them as valid
-	_trackview.track()->playlist()->foreach_region(
-		sigc::hide_return(sigc::mem_fun(*this, &StreamView::add_region_view)));
+	_trackview.track()->playlist()->foreach_region (
+	    sigc::hide_return (sigc::mem_fun (*this, &StreamView::add_region_view)));
 
 	// Stack regions by layer, and remove invalid regions
 	layer_regions();
 
-	for (std::list<RegionView *>::iterator i = region_views.begin(); i != region_views.end(); ++i)
-	{
+	for (std::list<RegionView *>::iterator i = region_views.begin(); i != region_views.end(); ++i) {
 		//((MidiScoreRegionView *)(*i))->redisplay_model ();
 	}
 }
 
 void
-MidiScoreStreamView::setup_rec_box ()
+MidiScoreStreamView::setup_rec_box()
 {
-
 }
 
-RegionView*
-MidiScoreStreamView::add_region_view_internal (
-	boost::shared_ptr<ARDOUR::Region> r,
-	bool wait_for_data,
-	bool recording)
+RegionView *
+MidiScoreStreamView::add_region_view_internal (boost::shared_ptr<ARDOUR::Region> r, bool wait_for_data, bool recording)
 {
-	boost::shared_ptr<ARDOUR::MidiRegion> region = boost::dynamic_pointer_cast<ARDOUR::MidiRegion>(r);
+	boost::shared_ptr<ARDOUR::MidiRegion> region = boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (r);
 	if (!region) {
 		return nullptr;
 	}
 
-	for (std::list<RegionView*>::iterator i = region_views.begin(); i != region_views.end(); ++i) {
+	for (std::list<RegionView *>::iterator i = region_views.begin(); i != region_views.end(); ++i) {
 		if ((*i)->region() == r) {
 
 			/* great. we already have a MidiRegionView for this Region. use it again. */
@@ -91,7 +84,7 @@ MidiScoreStreamView::add_region_view_internal (
 		}
 	}
 
-	MidiScoreRegionView* region_view = create_region_view (r, wait_for_data, recording);
+	MidiScoreRegionView *region_view = create_region_view (r, wait_for_data, recording);
 	if (!region_view) {
 		return nullptr;
 	}
@@ -103,46 +96,44 @@ MidiScoreStreamView::add_region_view_internal (
 	/* catch regionview going away */
 
 	boost::weak_ptr<ARDOUR::Region> wr (region); // make this explicit
-	region->DropReferences.connect (*this, invalidator (*this), boost::bind (&MidiScoreStreamView::remove_region_view, this, wr), gui_context());
+	region->DropReferences.connect (*this, invalidator (*this),
+	                                boost::bind (&MidiScoreStreamView::remove_region_view, this, wr),
+	                                gui_context());
 
 	RegionViewAdded (region_view);
 
 	return region_view;
 }
 
-MidiScoreRegionView*
-MidiScoreStreamView::create_region_view (
-	boost::shared_ptr<ARDOUR::Region> r,
-	bool wait_for_waves,
-	bool recording)
+MidiScoreRegionView *
+MidiScoreStreamView::create_region_view (boost::shared_ptr<ARDOUR::Region> r, bool wait_for_waves, bool recording)
 {
-	boost::shared_ptr<ARDOUR::MidiRegion> region = boost::dynamic_pointer_cast<ARDOUR::MidiRegion>(r);
+	boost::shared_ptr<ARDOUR::MidiRegion> region = boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (r);
 	if (!region) {
 		return nullptr;
 	}
 
-	MidiScoreRegionView *region_view = new MidiScoreRegionView(
-			_canvas_group, _trackview, region,
-			_samples_per_pixel, region_color);
+	MidiScoreRegionView *region_view
+	    = new MidiScoreRegionView (_canvas_group, _trackview, region, _samples_per_pixel, region_color);
 
-	region_view->init(false);
+	region_view->init (false);
 
 	return region_view;
 }
 
 void
-MidiScoreStreamView::color_handler ()
+MidiScoreStreamView::color_handler()
 {
 	update_bar_lines();
-	canvas_rect->set_fill_color(0xffffffe0);
+	canvas_rect->set_fill_color (0xffffffe0);
 }
 
 void
 MidiScoreStreamView::update_contents_height()
 {
-	StreamView::update_contents_height ();
+	StreamView::update_contents_height();
 
-	_bar_lines->set_extent(ArdourCanvas::COORD_MAX);
+	_bar_lines->set_extent (ArdourCanvas::COORD_MAX);
 
 	double total_bar_height = child_height() / 2;
 	_line_distance = total_bar_height / 4;
@@ -152,13 +143,12 @@ MidiScoreStreamView::update_contents_height()
 }
 
 void
-MidiScoreStreamView::update_bar_lines ()
+MidiScoreStreamView::update_bar_lines()
 {
 
 	_bar_lines->clear();
-	for (int i = 0; i < 5; ++i)
-	{
+	for (int i = 0; i < 5; ++i) {
 		double y = _bottom_line - _line_distance * i;
-		_bar_lines->add_coord(y, 1.0, 0x000000ff);
+		_bar_lines->add_coord (y, 1.0, 0x000000ff);
 	}
 }

@@ -21,9 +21,10 @@
 
 #include "region_view.h"
 
-namespace ARDOUR {
-	class MidiModel;
-	class MidiRegion;
+namespace ARDOUR
+{
+class MidiModel;
+class MidiRegion;
 }
 
 class RouteTimeAxisView;
@@ -31,18 +32,20 @@ class RouteTimeAxisView;
 class MidiScoreRegionView : public RegionView
 {
 public:
-	MidiScoreRegionView (ArdourCanvas::Container* parent,
-	                     RouteTimeAxisView& tv,
-	                     boost::shared_ptr<ARDOUR::MidiRegion> r,
-	                     double samples_per_pixel,
-	                     uint32_t basic_color);
-	~MidiScoreRegionView () override;
+	MidiScoreRegionView (ArdourCanvas::Container *parent, RouteTimeAxisView &tv,
+	                     boost::shared_ptr<ARDOUR::MidiRegion> r, double samples_per_pixel, uint32_t basic_color);
+	~MidiScoreRegionView() override;
 
 	const boost::shared_ptr<ARDOUR::MidiRegion> midi_region() const;
 
-	GhostRegion* add_ghost(TimeAxisView&) override { return nullptr; }
+	GhostRegion *
+	add_ghost (TimeAxisView &) override
+	{
+		return nullptr;
+	}
 
 	void _redisplay (bool view_only) override;
+
 private:
 	boost::shared_ptr<ARDOUR::MidiModel> _model;
 };

@@ -29,26 +29,22 @@
 #include "midi_score_streamview.h"
 #include "utils.h"
 
-MidiScoreTimeAxisView::MidiScoreTimeAxisView (
-	ARDOUR::Session *s,
-	boost::shared_ptr<ARDOUR::Stripable> strip,
-	PublicEditor &e,
-	TimeAxisView &parent,
-	ArdourCanvas::Canvas &canvas)
-	: TimeAxisView (s, e, &parent, canvas), _stripable (strip)
+MidiScoreTimeAxisView::MidiScoreTimeAxisView (ARDOUR::Session *s, boost::shared_ptr<ARDOUR::Stripable> strip,
+                                              PublicEditor &e, TimeAxisView &parent, ArdourCanvas::Canvas &canvas)
+    : TimeAxisView (s, e, &parent, canvas), _stripable (strip)
 {
-	_view = new MidiScoreStreamView(*this);
-	_view->attach ();
+	_view = new MidiScoreStreamView (*this);
+	_view->attach();
 
-	set_height(preset_height(HeightNormal));
+	set_height (preset_height (HeightNormal));
 
 	// name label isn't editable on a midi score track; remove the tooltip
-	ArdourWidgets::set_tooltip(name_label, X_(""));
-	name_label.set_text("Score");
+	ArdourWidgets::set_tooltip (name_label, X_ (""));
+	name_label.set_text ("Score");
 	name_label.show();
 }
 
-MidiScoreTimeAxisView::~MidiScoreTimeAxisView () 
+MidiScoreTimeAxisView::~MidiScoreTimeAxisView()
 {
 	delete _view;
 }
@@ -56,32 +52,35 @@ MidiScoreTimeAxisView::~MidiScoreTimeAxisView ()
 void
 MidiScoreTimeAxisView::set_height (uint32_t h, TrackHeightMode m, bool from_idle)
 {
-	bool const changed = (height != (uint32_t) h) || _first_call_to_set_height;
+	bool const changed = (height != (uint32_t)h) || _first_call_to_set_height;
 	TimeAxisView::set_height (h, m, from_idle);
 
-	_view->set_height(h);
+	_view->set_height (h);
 	_view->update_contents_height();
 
 	_first_call_to_set_height = false;
 	if (changed) {
 		if (_canvas_display->visible() && _stripable) {
 			/* only emit the signal if the height really changed and we were visible */
-			_stripable->gui_changed ("visible_tracks", (void *) 0); /* EMIT_SIGNAL */
+			_stripable->gui_changed ("visible_tracks", (void *)0); /* EMIT_SIGNAL */
 		}
 	}
 }
 
-Gdk::Color MidiScoreTimeAxisView::color () const
+Gdk::Color
+MidiScoreTimeAxisView::color() const
 {
 	return Gtkmm2ext::gdk_color_from_rgb (_stripable->presentation_info().color());
 }
 
-boost::shared_ptr<ARDOUR::Stripable> MidiScoreTimeAxisView::stripable () const
+boost::shared_ptr<ARDOUR::Stripable>
+MidiScoreTimeAxisView::stripable() const
 {
 	return _stripable;
 }
 
-std::string MidiScoreTimeAxisView::state_id () const
+std::string
+MidiScoreTimeAxisView::state_id() const
 {
 	return "midi score";
 }

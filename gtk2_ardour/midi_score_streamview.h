@@ -22,8 +22,9 @@
 #include "midi_score_region_view.h"
 #include "streamview.h"
 
-namespace ArdourCanvas {
-	class LineSet;
+namespace ArdourCanvas
+{
+class LineSet;
 }
 
 class MidiScoreTimeAxisView;
@@ -31,34 +32,27 @@ class MidiScoreTimeAxisView;
 class MidiScoreStreamView : public StreamView
 {
 public:
-	MidiScoreStreamView (MidiScoreTimeAxisView&);
+	MidiScoreStreamView (MidiScoreTimeAxisView &);
 	~MidiScoreStreamView() override;
-
 
 	void redisplay_track() override;
 	void setup_rec_box() override;
-	RegionView* add_region_view_internal (
-			boost::shared_ptr<ARDOUR::Region>,
-			bool wait_for_data,
-			bool recording = false) override;
-	MidiScoreRegionView* create_region_view (
-			boost::shared_ptr<ARDOUR::Region>,
-			bool wait_for_data,
-			bool recording) override;
+	RegionView *add_region_view_internal (boost::shared_ptr<ARDOUR::Region>, bool wait_for_data,
+	                                      bool recording = false) override;
+	MidiScoreRegionView *create_region_view (boost::shared_ptr<ARDOUR::Region>, bool wait_for_data,
+	                                         bool recording) override;
 	void color_handler() override;
-	void update_contents_height ();
+	void update_contents_height();
 
-
-	void update_bar_lines ();
+	void update_bar_lines();
 
 private:
-	MidiScoreTimeAxisView& _time_axis_view;
+	MidiScoreTimeAxisView &_time_axis_view;
 
-	ArdourCanvas::LineSet*    _bar_lines = nullptr;
+	ArdourCanvas::LineSet *_bar_lines = nullptr;
 
 	double _line_distance = 10;
 	double _bottom_line = 50;
-
 };
 
 #endif /* __gtk_ardour_midi_score_streamview_h__ */
