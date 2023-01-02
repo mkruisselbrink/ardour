@@ -57,7 +57,7 @@ MidiScoreStreamView::redisplay_track ()
 
 	for (std::list<RegionView *>::iterator i = region_views.begin(); i != region_views.end(); ++i)
 	{
-		((MidiScoreRegionView *)(*i))->redisplay_model ();
+		//((MidiScoreRegionView *)(*i))->redisplay_model ();
 	}
 }
 
@@ -159,6 +159,6 @@ MidiScoreStreamView::update_bar_lines ()
 	for (int i = 0; i < 5; ++i)
 	{
 		double y = _bottom_line - _line_distance * i;
-		_bar_lines->add(y, 1.0, 0x000000ff);
+		_bar_lines->add_coord(y, 1.0, 0x000000ff);
 	}
 }

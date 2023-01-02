@@ -38,7 +38,7 @@ public:
 private:
 	MidiScoreRegionView& _region;
 	const boost::shared_ptr<NoteType> _note;
-}
+};
 
 ScoreNote::ScoreNote (
 		MidiScoreRegionView& region,
@@ -65,7 +65,7 @@ std::cerr << "Creating midi score region view" << std::endl;
 
 	{
 		std::cerr << "Loading model" << std::endl;
-		Glib::Threads::Mutex::Lock lm(midi_region()->midi_source(0)->mutex());
+		ARDOUR::Source::WriterLock lm(midi_region()->midi_source(0)->mutex());
 		midi_region()->midi_source(0)->load_model(lm);
 	}
 	_model = midi_region()->midi_source(0)->model();
@@ -80,7 +80,7 @@ MidiScoreRegionView::midi_region() const
 }
 
 void
-MidiScoreRegionView::redisplay_model ()
+MidiScoreRegionView::_redisplay (bool view_only)
 {
 
 	if (!_model) {

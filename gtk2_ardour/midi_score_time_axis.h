@@ -40,7 +40,7 @@ public:
 	                       ArdourCanvas::Canvas&);
 	~MidiScoreTimeAxisView () override;
 
-	void set_height(uint32_t, TrackHeightMode m = OnlySelf) override;
+	void set_height(uint32_t, TrackHeightMode m = OnlySelf, bool from_idle = false) override;
 	Gdk::Color color () const override;
 	boost::shared_ptr<ARDOUR::Stripable> stripable () const override;
 	std::string state_id () const override;

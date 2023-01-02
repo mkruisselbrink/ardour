@@ -42,7 +42,7 @@ public:
 
 	GhostRegion* add_ghost(TimeAxisView&) override { return nullptr; }
 
-	void redisplay_model ();
+	void _redisplay (bool view_only) override;
 private:
 	boost::shared_ptr<ARDOUR::MidiModel> _model;
 };

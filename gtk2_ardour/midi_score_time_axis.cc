@@ -54,10 +54,10 @@ MidiScoreTimeAxisView::~MidiScoreTimeAxisView ()
 }
 
 void
-MidiScoreTimeAxisView::set_height (uint32_t h, TrackHeightMode m)
+MidiScoreTimeAxisView::set_height (uint32_t h, TrackHeightMode m, bool from_idle)
 {
 	bool const changed = (height != (uint32_t) h) || _first_call_to_set_height;
-	TimeAxisView::set_height (h, m);
+	TimeAxisView::set_height (h, m, from_idle);
 
 	_view->set_height(h);
 	_view->update_contents_height();
@@ -73,7 +73,7 @@ MidiScoreTimeAxisView::set_height (uint32_t h, TrackHeightMode m)
 
 Gdk::Color MidiScoreTimeAxisView::color () const
 {
-	return ARDOUR_UI_UTILS::gdk_color_from_rgb (_stripable->presentation_info().color());
+	return Gtkmm2ext::gdk_color_from_rgb (_stripable->presentation_info().color());
 }
 
 boost::shared_ptr<ARDOUR::Stripable> MidiScoreTimeAxisView::stripable () const
