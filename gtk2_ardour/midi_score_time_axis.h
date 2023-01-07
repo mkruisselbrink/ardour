@@ -47,8 +47,8 @@ private:
 	boost::shared_ptr<ARDOUR::Stripable> _stripable;
 	bool _first_call_to_set_height = true;
 
-	// Draws the clef, key signature, and first part of lines.
 	MidiScoreStreamView *_view = nullptr;
+	// Draws the clef, key signature, and first part of lines.
 	MidiScoreHeader *_header = nullptr;
 };
 

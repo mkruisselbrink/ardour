@@ -35,12 +35,17 @@ struct Clef {
     uint8_t note_for_position(int note_pos) const;
     int position_for_note(uint8_t note) const;
 
-    uint8_t lowest_note_on_bar() const { return note_for_position(-1); }
-    uint8_t highest_note_on_bar() const { return note_for_position(9); };
+    uint8_t lowest_note_on_bar() const { return note_for_position(0); }
+    uint8_t highest_note_on_bar() const { return note_for_position(8); };
+
+    int notes_on_bar(uint8_t note_min, uint8_t note_max) const;
+
+    static Clef treble_clef;
+    static Clef bass_clef;
 };
 
-// Terminated by name=nullptr.
-extern Clef g_clefs[];
+// Terminated by nullptr.
+extern Clef* g_clefs[];
 
 } // namespace SMuFL
 

@@ -28,10 +28,14 @@ class ClefTest : public CppUnit::TestFixture
 {
 	CPPUNIT_TEST_SUITE (ClefTest);
 	CPPUNIT_TEST (positionForNoteForPosition);
+	CPPUNIT_TEST (lowestNoteOnBar);
+	CPPUNIT_TEST (highestNoteOnBar);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
 	void positionForNoteForPosition();
+	void lowestNoteOnBar();
+	void highestNoteOnBar();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION (ClefTest);
@@ -54,6 +58,23 @@ ClefTest::positionForNoteForPosition()
 			last_pos = pos;
 		}
 	}
+}
+
+void
+ClefTest::lowestNoteOnBar()
+{
+    for (int i = -2; i < 10; ++i) {
+        std::cerr << "Pos: " << i << ", note: " << int{Clef::treble_clef.note_for_position(i)} << std::endl;
+    }
+	CPPUNIT_ASSERT_EQUAL (uint8_t{ 64 }, Clef::treble_clef.lowest_note_on_bar());
+	CPPUNIT_ASSERT_EQUAL (uint8_t{ 43 }, Clef::bass_clef.lowest_note_on_bar());
+}
+
+void
+ClefTest::highestNoteOnBar()
+{
+	CPPUNIT_ASSERT_EQUAL (uint8_t{ 77 }, Clef::treble_clef.highest_note_on_bar());
+	CPPUNIT_ASSERT_EQUAL (uint8_t{ 57 }, Clef::bass_clef.highest_note_on_bar());
 }
 
 } // namespace SMuFL

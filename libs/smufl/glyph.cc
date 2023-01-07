@@ -21,6 +21,10 @@
 #include <cassert>
 #include <map>
 
+#include <glib.h>
+
+#include <iostream>
+
 namespace SMuFL
 {
 
@@ -78,7 +82,16 @@ GlyphCodePoint (Glyph g)
 std::string
 GlyphAsUTF8 (Glyph g)
 {
-	return "";
+	gunichar2 code_point = GlyphCodePoint (g);
+	glong len;
+	gchar *utf8 = g_utf16_to_utf8 (&code_point, /*len=*/1, /*items_read=*/nullptr, &len, /*error=*/nullptr);
+	if (!utf8 || len == 0) {
+		std::cerr << "Failed to get utf8" << std::endl;
+		return "";
+	}
+	std::string rv (utf8, len);
+	g_free (utf8);
+	return rv;
 }
 
 boost::optional<Glyph>
@@ -91,8 +104,10 @@ GlyphFromName (const std::string &name)
 	return it->second;
 }
 
-std::ostream& operator<<(std::ostream& os, Glyph g) {
-    return os << GlyphName(g);
+std::ostream &
+operator<< (std::ostream &os, Glyph g)
+{
+	return os << GlyphName (g);
 }
 
 } // namespace SMuFL

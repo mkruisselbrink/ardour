@@ -27,6 +27,11 @@ namespace ArdourCanvas
 class LineSet;
 }
 
+namespace SMuFL
+{
+	class Clef;
+}
+
 class MidiScoreTimeAxisView;
 
 class MidiScoreStreamView : public StreamView
@@ -48,6 +53,11 @@ public:
 	void update_contents_height();
 	void update_bar_lines();
 
+	double bottom_line() const { return _bottom_line; }
+	double line_distance() const { return _line_distance; }
+
+	const SMuFL::Clef* clef() const { return _clef; }
+
 private:
 	MidiScoreTimeAxisView &_time_axis_view;
 
@@ -59,6 +69,8 @@ private:
 	bool _range_dirty = false;
 	uint8_t _data_note_min = 127;
 	uint8_t _data_note_max = 0;
+
+	SMuFL::Clef* _clef = nullptr;
 };
 
 #endif /* __gtk_ardour_midi_score_streamview_h__ */

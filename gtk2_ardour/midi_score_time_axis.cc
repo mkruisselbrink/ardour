@@ -24,10 +24,117 @@
 
 #include "canvas/container.h"
 
+#include "smufl/clefs.h"
+
 #include "widgets/tooltips.h"
 
 #include "midi_score_streamview.h"
 #include "utils.h"
+
+class MidiScoreHeader : public Gtk::DrawingArea
+{
+public:
+	MidiScoreHeader (MidiScoreStreamView &);
+
+	bool on_expose_event (GdkEventExpose *) override;
+	void on_size_request (Gtk::Requisition *) override;
+	void on_size_allocate (Gtk::Allocation &a) override;
+
+	void note_range_changed();
+
+private:
+	MidiScoreStreamView &_view;
+};
+
+MidiScoreHeader::MidiScoreHeader (MidiScoreStreamView &v) : _view (v)
+{
+	//_view.NoteRangeChanged.connect (sigc::mem_fun (*this, &PianoRollHeader::note_range_changed));
+}
+
+bool
+MidiScoreHeader::on_expose_event (GdkEventExpose *ev)
+{
+	GdkRectangle &rect = ev->area;
+	double bottom_line = _view.bottom_line();
+	double line_distance = _view.line_distance();
+
+	std::cerr << "Expose event: " << rect.x << "," << rect.y << " " << rect.width << "x" << rect.height
+		  << std::endl;
+
+	Cairo::RefPtr<Cairo::Context> cr = get_window()->create_cairo_context();
+
+	cr->rectangle (rect.x, rect.y, rect.width, rect.height);
+	cr->set_source_rgba (1, 1, 1, 0.878);
+	cr->fill();
+
+	cr->set_source_rgb (0, 0, 0);
+	cr->set_line_width (1);
+	for (int i = 0; i < 5; ++i) {
+		double y = (bottom_line - line_distance * i) - 0.5;
+		// TODO: make y be rounded correctly
+		cr->move_to (0, y);
+		cr->line_to (get_width(), y);
+		cr->stroke();
+	}
+
+	Glib::RefPtr<Pango::Context> pango = get_pango_context();
+	cr->select_font_face ("Leland", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
+	cr->set_font_size (line_distance * 4);
+
+	double spacing = std::min (line_distance, 15.0);
+	double x = get_width();
+	{
+		std::string ts_top = SMuFL::GlyphAsUTF8 (SMuFL::time_signature_digits[6]);
+		std::string ts_bottom = SMuFL::GlyphAsUTF8 (SMuFL::time_signature_digits[8]);
+		Cairo::TextExtents top_extents, bottom_extents;
+		cr->get_text_extents (ts_top, top_extents);
+		cr->get_text_extents (ts_bottom, bottom_extents);
+
+		x -= std::max (top_extents.width, bottom_extents.width) + spacing;
+
+		cr->move_to (x, bottom_line - line_distance);
+		cr->show_text (ts_bottom);
+		cr->move_to (x, bottom_line - line_distance * 3);
+		cr->show_text (ts_top);
+	}
+
+	// TODO: key signature
+
+	const SMuFL::Clef *clef = _view.clef();
+	if (clef) {
+		std::string s = SMuFL::GlyphAsUTF8 (clef->glyph);
+		Cairo::TextExtents extents;
+		cr->get_text_extents (s, extents);
+		std::cerr << "Clef extents: " << extents.width << "x" << extents.height
+			  << ", bearing: " << extents.x_bearing << ", advance: " << extents.x_advance << std::endl;
+		x -= extents.width + 2 * spacing;
+		cr->move_to (x, bottom_line - line_distance * clef->clef_position / 2);
+		cr->show_text (SMuFL::GlyphAsUTF8 (clef->glyph));
+	}
+
+	return true;
+}
+
+void
+MidiScoreHeader::on_size_request (Gtk::Requisition *r)
+{
+	std::cerr << "On size request" << std::endl;
+	r->width = 200;
+}
+
+void
+MidiScoreHeader::on_size_allocate (Gtk::Allocation &a)
+{
+	DrawingArea::on_size_allocate (a);
+
+	std::cerr << "Got size: " << get_width() << std::endl;
+}
+
+void
+MidiScoreHeader::note_range_changed()
+{
+	std::cerr << "Note range changed" << std::endl;
+}
 
 MidiScoreTimeAxisView::MidiScoreTimeAxisView (ARDOUR::Session *s, boost::shared_ptr<ARDOUR::Stripable> strip,
                                               PublicEditor &e, TimeAxisView &parent, ArdourCanvas::Canvas &canvas)
@@ -36,7 +143,11 @@ MidiScoreTimeAxisView::MidiScoreTimeAxisView (ARDOUR::Session *s, boost::shared_
 	_view = new MidiScoreStreamView (*this);
 	_view->attach();
 
-	set_height (preset_height (HeightNormal));
+	_header = new MidiScoreHeader (*_view);
+	time_axis_hbox.pack_end (*_header, /*expand=*/false, /*fill=*/false, /*padding=*/0);
+	_header->show();
+
+	set_height (preset_height (HeightLarge));
 
 	// name label isn't editable on a midi score track; remove the tooltip
 	ArdourWidgets::set_tooltip (name_label, X_ (""));

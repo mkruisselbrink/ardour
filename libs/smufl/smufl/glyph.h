@@ -19,8 +19,8 @@
 #ifndef SMUFL_GLYPH_H
 #define SMUFL_GLYPH_H
 
-#include <string>
 #include <ostream>
+#include <string>
 
 #include <boost/optional.hpp>
 
@@ -29,17 +29,22 @@ namespace SMuFL
 
 enum class Glyph {
 #include "smufl/data/glyph_ids.h"
-    kNumEntries
+	kNumEntries
+};
+
+constexpr Glyph time_signature_digits[] = {
+	Glyph::kTimeSig0, Glyph::kTimeSig1, Glyph::kTimeSig2, Glyph::kTimeSig3, Glyph::kTimeSig4,
+	Glyph::kTimeSig5, Glyph::kTimeSig6, Glyph::kTimeSig7, Glyph::kTimeSig8, Glyph::kTimeSig9,
 };
 
 extern const char *GlyphName (Glyph g);
 extern const char *GlyphDescription (Glyph g);
 extern uint16_t GlyphCodePoint (Glyph g);
 extern std::string GlyphAsUTF8 (Glyph g);
-extern boost::optional<Glyph> GlyphFromName(const std::string& name);
+extern boost::optional<Glyph> GlyphFromName (const std::string &name);
 
-extern std::ostream& operator<<(std::ostream& os, Glyph g);
+extern std::ostream &operator<< (std::ostream &os, Glyph g);
 
 } // namespace SMuFL
 
-#endif  // SMUFL_GLYPH_H
+#endif // SMUFL_GLYPH_H

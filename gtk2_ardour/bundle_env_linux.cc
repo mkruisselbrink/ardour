@@ -144,6 +144,15 @@ load_custom_fonts()
 		}
 	}
 
+	if (!find_file (ardour_data_search_path(), "Leland.otf", font_file)) {
+		cerr << _("Cannot find Leland TrueType font") << endl;
+	} else {
+		FcBool ret = FcConfigAppFontAddFile(config, reinterpret_cast<const FcChar8*>(font_file.c_str()));
+		if (ret == FcFalse) {
+			cerr << _("Cannot load Leland TrueType font.") << endl;
+		}
+	}
+
 	if (FcFalse == FcConfigSetCurrent(config)) {
 		cerr << _("Failed to set fontconfig configuration.") << endl;
 	}

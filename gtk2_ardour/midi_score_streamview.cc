@@ -21,13 +21,14 @@
 #include "canvas/container.h"
 #include "canvas/line_set.h"
 
+#include "ardour/midi_model.h"
 #include "ardour/midi_region.h"
 #include "ardour/midi_source.h"
-#include "ardour/midi_model.h"
 
+#include "smufl/clefs.h"
 #include "smufl/font_data.h"
 #include "smufl/glyph.h"
- 
+
 #include "gui_thread.h"
 #include "midi_score_region_view.h"
 #include "midi_score_time_axis.h"
@@ -41,11 +42,11 @@ MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
 	_bar_lines->lower_to_bottom();
 	canvas_rect->lower_to_bottom();
 
-	std::cerr << SMuFL::GlyphDescription(SMuFL::Glyph::kFClef) << std::endl;
-	SMuFL::FontData fd;
-	fd.LoadFromJSON("/home/mek/Source/ardour7/libs/smufl/fonts/Leland/leland_metadata.json");
-	std::cerr << fd;
-	
+	// std::cerr << SMuFL::GlyphDescription(SMuFL::Glyph::kFClef) << std::endl;
+	// SMuFL::FontData fd;
+	// fd.LoadFromJSON("/home/mek/Source/ardour7/libs/smufl/fonts/Leland/leland_metadata.json");
+	// std::cerr << fd;
+
 	color_handler();
 
 	UIConfiguration::instance().ColorsChanged.connect (sigc::mem_fun (*this, &MidiScoreStreamView::color_handler));
@@ -72,7 +73,16 @@ MidiScoreStreamView::redisplay_track()
 		_data_note_max = 71;
 		std::cerr << "Using default range" << std::endl;
 	}
-	std::cerr << "Note range: " << int{_data_note_min} << " - " << int{_data_note_max} << std::endl;
+	std::cerr << "Note range: " << int{ _data_note_min } << " - " << int{ _data_note_max } << std::endl;
+
+	int bass_note_range = SMuFL::Clef::bass_clef.notes_on_bar (_data_note_min, _data_note_max);
+	int treble_note_range = SMuFL::Clef::treble_clef.notes_on_bar (_data_note_min, _data_note_max);
+	std::cerr << "Bass: " << bass_note_range << ", Treble: " << treble_note_range << std::endl;
+	if (bass_note_range > treble_note_range) {
+		_clef = &SMuFL::Clef::bass_clef;
+	} else {
+		_clef = &SMuFL::Clef::treble_clef;
+	}
 
 	std::vector<RegionView::DisplaySuspender> vds;
 	// Flag region views as invalid and disable drawing
@@ -204,9 +214,9 @@ MidiScoreStreamView::update_contents_height()
 
 	_bar_lines->set_extent (ArdourCanvas::COORD_MAX);
 
-	double total_bar_height = child_height() / 2;
+	double total_bar_height = child_height() / 3;
 	_line_distance = total_bar_height / 4;
-	_bottom_line = child_height() / 2 + total_bar_height / 2;
+	_bottom_line = child_height() / 3 + total_bar_height;
 
 	update_bar_lines();
 }

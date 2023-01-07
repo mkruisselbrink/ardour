@@ -57,6 +57,9 @@ def build(bld):
     obj.uselib       = [ 'BOOST', 'GLIBMM' ]
     obj.use          = [ 'libpbd' ]
 
+    bld.install_files(bld.env['DATADIR'], 'fonts/Leland/Leland.otf')
+    bld.install_files(bld.env['DATADIR'], 'fonts/Leland/leland_metadata.json')
+
     if bld.env['BUILD_TESTS'] and bld.is_defined('HAVE_CPPUNIT'):
         # Static library (for unit test code coverage)
         obj = bld(features = 'cxx cstlib')
