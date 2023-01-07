@@ -25,6 +25,7 @@ VERSION = SMUFL_VERSION
 I18N_PACKAGE = 'libsmufl'
 
 smufl_sources = [
+    'clefs.cc',
     'font_data.cc',
     'glyph.cc',
 ]
