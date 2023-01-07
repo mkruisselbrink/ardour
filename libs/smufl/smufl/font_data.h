@@ -19,8 +19,11 @@
 #ifndef SMUFL_FONT_DATA_H
 #define SMUFL_FONT_DATA_H
 
+#include <map>
 #include <string>
 #include <vector>
+
+#include <boost/optional.hpp>
 
 namespace SMuFL
 {
@@ -34,10 +37,21 @@ struct EngravingDefaults {
 #undef ENGRAVING_DEFAULT_SELF
 #undef ENGRAVING_DEFAULTS_FLOAT_FIELD
 
+struct Offset {
+	float x = 0;
+	float y = 0;
+};
+
+struct GlyphInfo {
+	boost::optional<Offset> cutOutNE, cutOutNW, cutOutSE, cutOutSW;
+	boost::optional<Offset> stemUpSE, stemUpNW, stemDownNW, stemDownSW;
+	boost::optional<Offset> opticalCenter, repeatOffset;
+};
+
 class FontData
 {
 public:
-    bool LoadFromJSON(const std::string& file_name);
+	bool LoadFromJSON (const std::string &file_name);
 
 	const std::string &
 	font_name() const
@@ -57,11 +71,18 @@ public:
 		return _engraving_defaults;
 	}
 
+	friend std::ostream &operator<< (std::ostream &os, const FontData &fd);
+
 private:
 	std::string _font_name;
 	std::string _font_version;
 	EngravingDefaults _engraving_defaults;
+	std::map<std::string, GlyphInfo> _glyph_info;
 };
+
+extern std::ostream &operator<< (std::ostream &os, const EngravingDefaults &ed);
+extern std::ostream &operator<< (std::ostream &os, const Offset &o);
+extern std::ostream &operator<< (std::ostream &os, const GlyphInfo &gi);
 
 } // namespace SMuFL
 

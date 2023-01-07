@@ -25,6 +25,7 @@
 #include "ardour/midi_source.h"
 #include "ardour/midi_model.h"
 
+#include "smufl/font_data.h"
 #include "smufl/glyph.h"
  
 #include "gui_thread.h"
@@ -41,6 +42,10 @@ MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
 	canvas_rect->lower_to_bottom();
 
 	std::cerr << SMuFL::GlyphDescription(SMuFL::Glyph::kFClef) << std::endl;
+	SMuFL::FontData fd;
+	fd.LoadFromJSON("/home/mek/Source/ardour7/libs/smufl/fonts/Leland/leland_metadata.json");
+	std::cerr << fd;
+	
 	color_handler();
 
 	UIConfiguration::instance().ColorsChanged.connect (sigc::mem_fun (*this, &MidiScoreStreamView::color_handler));
