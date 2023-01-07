@@ -1,0 +1,64 @@
+/*
+ * Copyright (C) 2023 Marijn Kruisselbrink <mek@google.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include "smufl/glyph.h"
+
+#include <cassert>
+
+namespace SMuFL
+{ 
+
+namespace {
+
+const char* const g_glyph_names[] = {
+#include "smufl/data/glyph_names.h"
+};
+static_assert(static_cast<size_t>(Glyph::kNumEntries) == std::size(g_glyph_names));
+
+const char* const g_glyph_descriptions[] = {
+#include "smufl/data/glyph_descriptions.h"
+};
+static_assert(static_cast<size_t>(Glyph::kNumEntries) == std::size(g_glyph_descriptions));
+
+const uint16_t g_code_points[] = {
+#include "smufl/data/glyph_codepoints.h"
+};
+static_assert(static_cast<size_t>(Glyph::kNumEntries) == std::size(g_code_points));
+
+}  // namespace
+
+const char *GlyphName (Glyph g) {
+    assert(g <= Glyph::kNumEntries);
+    return g_glyph_names[static_cast<size_t>(g)];
+}
+
+const char *GlyphDescription (Glyph g) {
+    assert(g <= Glyph::kNumEntries);
+    return g_glyph_descriptions[static_cast<size_t>(g)];
+}
+
+uint16_t GlyphCodePoint (Glyph g) {
+    assert(g <= Glyph::kNumEntries);
+    return g_code_points[static_cast<size_t>(g)];
+}
+
+std::string GlyphAsUTF8 (Glyph g) {
+    return "";
+}
+
+} // namespace SMuFL

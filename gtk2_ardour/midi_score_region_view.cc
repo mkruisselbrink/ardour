@@ -61,15 +61,49 @@ MidiScoreRegionView::MidiScoreRegionView (ArdourCanvas::Container *parent, Route
 
 MidiScoreRegionView::~MidiScoreRegionView() = default;
 
+void MidiScoreRegionView::init(bool /* wfd*/) {
+	DisplaySuspender ds(*this);
+
+	RegionView::init (false);
+
+	reset_width_dependent_items(_pixel_width);
+	set_colors();
+	region_resized (ARDOUR::bounds_change);
+}
+
 const boost::shared_ptr<ARDOUR::MidiRegion>
 MidiScoreRegionView::midi_region() const
 {
 	return boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (_region);
 }
 
+void MidiScoreRegionView::reset_width_dependent_items (double pixel_width) {
+	RegionView::reset_width_dependent_items(pixel_width);
+
+	std::cerr << "reset width stuff: " << pixel_width << std::endl;
+	// view_changed();	
+}
+
 void
 MidiScoreRegionView::_redisplay (bool view_only)
 {
+	std::cerr << "_redisplay: " << view_only << std::endl;
+	if (view_only) {
+		PBD::PropertyChange what_changed;
+		/* we don't know what actually happened that requires a view
+		   update, but both _start and _length need to be shown
+		   correctly on the display, so make sure we do that.
+		*/
+
+		what_changed.add (ARDOUR::Properties::start);
+		what_changed.add (ARDOUR::Properties::length);
+
+		/* this calls reset_width_dependent_items() which calls
+		   view_changed() in the right way.
+		*/
+		region_resized (what_changed);
+		return;
+	}
 
 	if (!_model) {
 		std::cerr << "No model" << std::endl;

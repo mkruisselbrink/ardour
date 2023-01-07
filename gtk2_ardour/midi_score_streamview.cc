@@ -22,11 +22,16 @@
 #include "canvas/line_set.h"
 
 #include "ardour/midi_region.h"
+#include "ardour/midi_source.h"
+#include "ardour/midi_model.h"
 
+#include "smufl/glyph.h"
+ 
 #include "gui_thread.h"
 #include "midi_score_region_view.h"
 #include "midi_score_time_axis.h"
 #include "route_time_axis.h"
+#include "ui_config.h"
 
 MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
     : StreamView (*dynamic_cast<RouteTimeAxisView *> (tv.get_parent()), tv.canvas_display()), _time_axis_view (tv)
@@ -35,7 +40,10 @@ MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
 	_bar_lines->lower_to_bottom();
 	canvas_rect->lower_to_bottom();
 
+	std::cerr << SMuFL::GlyphDescription(SMuFL::Glyph::kFClef) << std::endl;
 	color_handler();
+
+	UIConfiguration::instance().ColorsChanged.connect (sigc::mem_fun (*this, &MidiScoreStreamView::color_handler));
 }
 
 MidiScoreStreamView::~MidiScoreStreamView()
@@ -46,6 +54,28 @@ MidiScoreStreamView::~MidiScoreStreamView()
 void
 MidiScoreStreamView::redisplay_track()
 {
+	// Load models if necessary, and find note range of all our contents.
+	_range_dirty = false;
+	_data_note_min = 127;
+	_data_note_max = 0;
+	_trackview.track()->playlist()->foreach_region (
+	    sigc::mem_fun (*this, &MidiScoreStreamView::update_contents_metrics));
+
+	// No notes, use default range
+	if (!_range_dirty) {
+		_data_note_min = 60;
+		_data_note_max = 71;
+		std::cerr << "Using default range" << std::endl;
+	}
+	std::cerr << "Note range: " << int{_data_note_min} << " - " << int{_data_note_max} << std::endl;
+
+	std::vector<RegionView::DisplaySuspender> vds;
+	// Flag region views as invalid and disable drawing
+	for (auto i = region_views.begin(); i != region_views.end(); ++i) {
+		(*i)->set_valid (false);
+		vds.push_back (RegionView::DisplaySuspender (**i, false));
+	}
+
 	// Add and display region views, and flag them as valid
 	_trackview.track()->playlist()->foreach_region (
 	    sigc::hide_return (sigc::mem_fun (*this, &StreamView::add_region_view)));
@@ -53,9 +83,36 @@ MidiScoreStreamView::redisplay_track()
 	// Stack regions by layer, and remove invalid regions
 	layer_regions();
 
-	for (std::list<RegionView *>::iterator i = region_views.begin(); i != region_views.end(); ++i) {
-		//((MidiScoreRegionView *)(*i))->redisplay_model ();
+	std::cerr << "Redisplaying track, region count: " << region_views.size() << std::endl;
+	// for (std::list<RegionView *>::iterator i = region_views.begin(); i != region_views.end(); ++i) {
+	//	((MidiScoreRegionView *)(*i))->redisplay();
+	// }
+}
+
+void
+MidiScoreStreamView::update_contents_metrics (boost::shared_ptr<ARDOUR::Region> r)
+{
+	boost::shared_ptr<ARDOUR::MidiRegion> mr = boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (r);
+
+	if (mr) {
+		ARDOUR::Source::ReaderLock lm (mr->midi_source (0)->mutex());
+		_range_dirty = update_data_note_range (mr->model()->lowest_note(), mr->model()->highest_note());
 	}
+}
+
+bool
+MidiScoreStreamView::update_data_note_range (uint8_t min, uint8_t max)
+{
+	bool dirty = false;
+	if (min < _data_note_min) {
+		_data_note_min = min;
+		dirty = true;
+	}
+	if (max > _data_note_max) {
+		_data_note_max = max;
+		dirty = true;
+	}
+	return dirty;
 }
 
 void
@@ -66,6 +123,8 @@ MidiScoreStreamView::setup_rec_box()
 RegionView *
 MidiScoreStreamView::add_region_view_internal (boost::shared_ptr<ARDOUR::Region> r, bool wait_for_data, bool recording)
 {
+	return nullptr;
+
 	boost::shared_ptr<ARDOUR::MidiRegion> region = boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (r);
 	if (!region) {
 		return nullptr;
@@ -74,11 +133,10 @@ MidiScoreStreamView::add_region_view_internal (boost::shared_ptr<ARDOUR::Region>
 	for (std::list<RegionView *>::iterator i = region_views.begin(); i != region_views.end(); ++i) {
 		if ((*i)->region() == r) {
 
-			/* great. we already have a MidiRegionView for this Region. use it again. */
+			/* great. we already have a MidiScoreRegionView for this Region. use it again. */
 
 			(*i)->set_valid (true);
-
-			// display_region(dynamic_cast<MidiRegionView*>(*i), wait_for_data);
+			display_region (dynamic_cast<MidiScoreRegionView *> (*i));
 
 			return 0;
 		}
@@ -90,8 +148,7 @@ MidiScoreStreamView::add_region_view_internal (boost::shared_ptr<ARDOUR::Region>
 	}
 
 	region_views.push_front (region_view);
-
-	// display_region (region_view, wait_for_data);
+	display_region (region_view);
 
 	/* catch regionview going away */
 
@@ -105,9 +162,15 @@ MidiScoreStreamView::add_region_view_internal (boost::shared_ptr<ARDOUR::Region>
 	return region_view;
 }
 
+void
+MidiScoreStreamView::display_region (MidiScoreRegionView *region_view)
+{
+}
+
 MidiScoreRegionView *
 MidiScoreStreamView::create_region_view (boost::shared_ptr<ARDOUR::Region> r, bool wait_for_waves, bool recording)
 {
+	return nullptr;
 	boost::shared_ptr<ARDOUR::MidiRegion> region = boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (r);
 	if (!region) {
 		return nullptr;
@@ -124,6 +187,7 @@ MidiScoreStreamView::create_region_view (boost::shared_ptr<ARDOUR::Region> r, bo
 void
 MidiScoreStreamView::color_handler()
 {
+	_canvas_group->set_render_with_alpha (UIConfiguration::instance().modifier ("region alpha").a());
 	update_bar_lines();
 	canvas_rect->set_fill_color (0xffffffe0);
 }

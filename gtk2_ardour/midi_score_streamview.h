@@ -42,8 +42,10 @@ public:
 	MidiScoreRegionView *create_region_view (boost::shared_ptr<ARDOUR::Region>, bool wait_for_data,
 	                                         bool recording) override;
 	void color_handler() override;
+	void update_contents_metrics (boost::shared_ptr<ARDOUR::Region> r) override;
+	bool update_data_note_range (uint8_t min, uint8_t max);
+	void display_region (MidiScoreRegionView *region_view);
 	void update_contents_height();
-
 	void update_bar_lines();
 
 private:
@@ -53,6 +55,10 @@ private:
 
 	double _line_distance = 10;
 	double _bottom_line = 50;
+
+	bool _range_dirty = false;
+	uint8_t _data_note_min = 127;
+	uint8_t _data_note_max = 0;
 };
 
 #endif /* __gtk_ardour_midi_score_streamview_h__ */

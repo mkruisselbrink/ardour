@@ -572,6 +572,7 @@ def build(bld):
                 'libwaveview',
                 'libwidgets',
                 'libptformat',
+                'libsmufl',
                 ]
         obj.defines = [
                 'NOMAIN',
@@ -658,6 +659,7 @@ def build(bld):
                      'libwaveview',
                      'libwidgets',
                      'libptformat',
+                     'libsmufl',
                      ]
 
     obj.defines = [

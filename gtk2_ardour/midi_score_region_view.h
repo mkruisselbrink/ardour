@@ -36,6 +36,7 @@ public:
 	                     boost::shared_ptr<ARDOUR::MidiRegion> r, double samples_per_pixel, uint32_t basic_color);
 	~MidiScoreRegionView() override;
 
+	void init(bool) override;
 	const boost::shared_ptr<ARDOUR::MidiRegion> midi_region() const;
 
 	GhostRegion *
@@ -44,6 +45,7 @@ public:
 		return nullptr;
 	}
 
+	void reset_width_dependent_items (double pixel_width) override;
 	void _redisplay (bool view_only) override;
 
 private:

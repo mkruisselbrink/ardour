@@ -351,6 +351,7 @@ children = [
         'libs/vfork',
         'libs/ardouralsautil',
         'libs/auscan',
+        'libs/smufl',
 ]
 
 i18n_children = [

@@ -62,7 +62,7 @@ def build(bld):
     obj.defines     += [ 'PACKAGE="' + I18N_PACKAGE + '"' ]
     obj.uselib       = [ 'GLIBMM', 'XML', 'OSX' ]
     obj.use          = [ 'libpbd' ]
-
+    
     if  bld.env['BUILD_TESTS'] and bld.is_defined('HAVE_CPPUNIT'):
         # Static library (for unit test code coverage)
         obj = bld(features = 'cxx cstlib')
