@@ -25,6 +25,8 @@
 
 #include <boost/optional.hpp>
 
+#include "smufl/glyph.h"
+
 namespace SMuFL
 {
 
@@ -77,7 +79,7 @@ private:
 	std::string _font_name;
 	std::string _font_version;
 	EngravingDefaults _engraving_defaults;
-	std::map<std::string, GlyphInfo> _glyph_info;
+	std::map<Glyph, GlyphInfo> _glyph_info;
 };
 
 extern std::ostream &operator<< (std::ostream &os, const EngravingDefaults &ed);

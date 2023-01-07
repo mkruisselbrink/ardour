@@ -110,8 +110,13 @@ FontData::LoadFromJSON (const std::string &file_name)
 	_glyph_info.clear();
 	try {
 		for (const auto &glyph_data : root.get_child ("glyphsWithAnchors")) {
-			std::string glyph = glyph_data.first;
-			GlyphInfo &info = _glyph_info[glyph];
+			std::string glyph_name = glyph_data.first;
+            boost::optional<Glyph> glyph = GlyphFromName(glyph_name);
+            if (!glyph) {
+                PBD::debug << "Unknown glyph name: " << glyph_name << endmsg;
+                continue;
+            }
+			GlyphInfo &info = _glyph_info[*glyph];
 			info.cutOutNE = ReadOptionalOffset (glyph_data.second, "cutOutNE");
 			info.cutOutNW = ReadOptionalOffset (glyph_data.second, "cutOutNW");
 			info.cutOutSE = ReadOptionalOffset (glyph_data.second, "cutOutSE");

@@ -19,46 +19,80 @@
 #include "smufl/glyph.h"
 
 #include <cassert>
+#include <map>
 
 namespace SMuFL
-{ 
+{
 
-namespace {
+namespace
+{
 
-const char* const g_glyph_names[] = {
+	const char *const g_glyph_names[] = {
 #include "smufl/data/glyph_names.h"
-};
-static_assert(static_cast<size_t>(Glyph::kNumEntries) == std::size(g_glyph_names));
+	};
+	static_assert (static_cast<size_t> (Glyph::kNumEntries) == std::size (g_glyph_names));
 
-const char* const g_glyph_descriptions[] = {
+	const char *const g_glyph_descriptions[] = {
 #include "smufl/data/glyph_descriptions.h"
-};
-static_assert(static_cast<size_t>(Glyph::kNumEntries) == std::size(g_glyph_descriptions));
+	};
+	static_assert (static_cast<size_t> (Glyph::kNumEntries) == std::size (g_glyph_descriptions));
 
-const uint16_t g_code_points[] = {
+	const uint16_t g_code_points[] = {
 #include "smufl/data/glyph_codepoints.h"
-};
-static_assert(static_cast<size_t>(Glyph::kNumEntries) == std::size(g_code_points));
+	};
+	static_assert (static_cast<size_t> (Glyph::kNumEntries) == std::size (g_code_points));
 
-}  // namespace
+	std::map<std::string, Glyph>
+	GenerateGlyphMap()
+	{
+		std::map<std::string, Glyph> result;
+		for (size_t i = 0; i < static_cast<size_t> (Glyph::kNumEntries); ++i) {
+			result[g_glyph_names[i]] = static_cast<Glyph> (i);
+		}
+		return result;
+	}
 
-const char *GlyphName (Glyph g) {
-    assert(g <= Glyph::kNumEntries);
-    return g_glyph_names[static_cast<size_t>(g)];
+} // namespace
+
+const char *
+GlyphName (Glyph g)
+{
+	assert (g <= Glyph::kNumEntries);
+	return g_glyph_names[static_cast<size_t> (g)];
 }
 
-const char *GlyphDescription (Glyph g) {
-    assert(g <= Glyph::kNumEntries);
-    return g_glyph_descriptions[static_cast<size_t>(g)];
+const char *
+GlyphDescription (Glyph g)
+{
+	assert (g <= Glyph::kNumEntries);
+	return g_glyph_descriptions[static_cast<size_t> (g)];
 }
 
-uint16_t GlyphCodePoint (Glyph g) {
-    assert(g <= Glyph::kNumEntries);
-    return g_code_points[static_cast<size_t>(g)];
+uint16_t
+GlyphCodePoint (Glyph g)
+{
+	assert (g <= Glyph::kNumEntries);
+	return g_code_points[static_cast<size_t> (g)];
 }
 
-std::string GlyphAsUTF8 (Glyph g) {
-    return "";
+std::string
+GlyphAsUTF8 (Glyph g)
+{
+	return "";
+}
+
+boost::optional<Glyph>
+GlyphFromName (const std::string &name)
+{
+	static std::map<std::string, Glyph> glyph_map = GenerateGlyphMap();
+	auto it = glyph_map.find (name);
+	if (it == glyph_map.end())
+		return {};
+	return it->second;
+}
+
+std::ostream& operator<<(std::ostream& os, Glyph g) {
+    return os << GlyphName(g);
 }
 
 } // namespace SMuFL

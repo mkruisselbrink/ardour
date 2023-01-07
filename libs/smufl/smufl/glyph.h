@@ -20,6 +20,9 @@
 #define SMUFL_GLYPH_H
 
 #include <string>
+#include <ostream>
+
+#include <boost/optional.hpp>
 
 namespace SMuFL
 {
@@ -29,10 +32,13 @@ enum class Glyph {
     kNumEntries
 };
 
-extern const char *GlyphName (Glyph);
-extern const char *GlyphDescription (Glyph);
-extern uint16_t GlyphCodePoint (Glyph);
-extern std::string GlyphAsUTF8 (Glyph);
+extern const char *GlyphName (Glyph g);
+extern const char *GlyphDescription (Glyph g);
+extern uint16_t GlyphCodePoint (Glyph g);
+extern std::string GlyphAsUTF8 (Glyph g);
+extern boost::optional<Glyph> GlyphFromName(const std::string& name);
+
+extern std::ostream& operator<<(std::ostream& os, Glyph g);
 
 } // namespace SMuFL
 
