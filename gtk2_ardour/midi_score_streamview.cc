@@ -35,6 +35,70 @@
 #include "route_time_axis.h"
 #include "ui_config.h"
 
+class MidiScoreBar : public ArdourCanvas::Item
+{
+public:
+	MidiScoreBar (MidiScoreStreamView &view, ArdourCanvas::Item *parent, const ArdourCanvas::Duple &position,
+	              double width)
+	    : ArdourCanvas::Item (parent, position), _view (view), _width (width)
+	{
+		/*_rest = new ArdourCanvas::Text (this);
+		_rest->set_position ({_width / 2, 0});
+		_rest->set (SMuFL::GlyphAsUTF8(SMuFL::Glyph::kRestWhole));
+		Pango::FontDescription font;
+		font.set_family("Leland");
+		font.set_size(40);
+		_rest->set_font_description(font);*/
+	}
+
+	void
+	line_distance_changed()
+	{
+		// TODO: bounding box should be full height, so this shouldn't effect bounding box
+		begin_change();
+		end_change();
+	}
+
+	void
+	render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Context> cr) const override
+	{
+		ArdourCanvas::Rect self
+		    = item_to_window (ArdourCanvas::Rect (0, -_view.line_distance() * 4, _width, 0));
+		ArdourCanvas::Rect isect = self.intersection (area);
+		if (!isect)
+			return;
+
+		cr->set_source_rgb (0, 0, 0);
+		cr->set_line_width (1);
+		cr->move_to (self.x1 - 0.5, self.y0);
+		cr->line_to (self.x1 - 0.5, self.y1);
+		cr->stroke();
+
+		cr->select_font_face ("Leland", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
+		cr->set_font_size (_view.line_distance() * 4);
+
+		{
+			Cairo::TextExtents extents;
+			std::string s = SMuFL::GlyphAsUTF8 (SMuFL::Glyph::kRestWhole);
+			cr->get_text_extents (s, extents);
+			cr->move_to ((self.x1 - self.x0) / 2 + self.x0 - extents.width / 2,
+			             self.y1 - _view.line_distance() * 3);
+			cr->show_text (s);
+		}
+	}
+
+	void
+	compute_bounding_box() const override
+	{
+		_bounding_box = { 0, -_view.line_distance() * 4, _width, 0 };
+		set_bbox_clean();
+	}
+
+private:
+	MidiScoreStreamView &_view;
+	double _width;
+};
+
 MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
     : StreamView (*dynamic_cast<RouteTimeAxisView *> (tv.get_parent()), tv.canvas_display()), _time_axis_view (tv)
 {
@@ -42,6 +106,8 @@ MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
 	_bar_lines->lower_to_bottom();
 	canvas_rect->lower_to_bottom();
 
+	_bar = new MidiScoreBar (*this, _canvas_group, { 10, 10 }, 300);
+	_bar2 = new MidiScoreBar (*this, _canvas_group, { 310, 10 }, 300);
 	// std::cerr << SMuFL::GlyphDescription(SMuFL::Glyph::kFClef) << std::endl;
 	// SMuFL::FontData fd;
 	// fd.LoadFromJSON("/home/mek/Source/ardour7/libs/smufl/fonts/Leland/leland_metadata.json");
@@ -204,7 +270,7 @@ MidiScoreStreamView::color_handler()
 {
 	_canvas_group->set_render_with_alpha (UIConfiguration::instance().modifier ("region alpha").a());
 	update_bar_lines();
-	canvas_rect->set_fill_color (0xffffffe0);
+	canvas_rect->set_fill_color (0xffffffff);
 }
 
 void
@@ -217,6 +283,11 @@ MidiScoreStreamView::update_contents_height()
 	double total_bar_height = child_height() / 3;
 	_line_distance = total_bar_height / 4;
 	_bottom_line = child_height() / 3 + total_bar_height;
+
+	_bar->set_y_position (_bottom_line);
+	_bar->line_distance_changed();
+	_bar2->set_y_position (_bottom_line);
+	_bar2->line_distance_changed();
 
 	update_bar_lines();
 }

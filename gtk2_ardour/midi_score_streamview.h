@@ -33,6 +33,7 @@ namespace SMuFL
 }
 
 class MidiScoreTimeAxisView;
+class MidiScoreBar;
 
 class MidiScoreStreamView : public StreamView
 {
@@ -62,6 +63,9 @@ private:
 	MidiScoreTimeAxisView &_time_axis_view;
 
 	ArdourCanvas::LineSet *_bar_lines = nullptr;
+
+	MidiScoreBar* _bar = nullptr;
+	MidiScoreBar* _bar2 = nullptr;
 
 	double _line_distance = 10;
 	double _bottom_line = 50;

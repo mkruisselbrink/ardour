@@ -70,8 +70,7 @@ MidiScoreHeader::on_expose_event (GdkEventExpose *ev)
 	cr->set_source_rgb (0, 0, 0);
 	cr->set_line_width (1);
 	for (int i = 0; i < 5; ++i) {
-		double y = (bottom_line - line_distance * i) - 0.5;
-		// TODO: make y be rounded correctly
+		double y = round(bottom_line - line_distance * i) - 0.5;
 		cr->move_to (0, y);
 		cr->line_to (get_width(), y);
 		cr->stroke();
