@@ -36,8 +36,9 @@
 
 MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
     : StreamView (*dynamic_cast<RouteTimeAxisView *> (tv.get_parent()), tv.canvas_display()), _time_axis_view (tv),
-      _key_signature (-7)
+      _key_signature (2)
 {
+	// TODO: rename to staff lines
 	_bar_lines = new ArdourCanvas::LineSet (_canvas_group, ArdourCanvas::LineSet::Horizontal);
 	_bar_lines->lower_to_bottom();
 	canvas_rect->lower_to_bottom();

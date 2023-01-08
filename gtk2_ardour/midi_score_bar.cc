@@ -20,8 +20,43 @@
 
 #include "smufl/clefs.h"
 #include "smufl/glyph.h"
+#include "smufl/key_signature.h"
 
 #include "midi_score_streamview.h"
+
+namespace
+{
+using Accidental = SMuFL::KeySignature::Accidental;
+using Beats = Temporal::Beats;
+
+struct PosAndAcc {
+	int position;
+	Accidental accidental = Accidental::kNone;
+};
+
+struct Chord {
+	Beats position;
+	Beats duration;
+	std::vector<PosAndAcc> notes;
+};
+
+SMuFL::Glyph
+glyph_for_accidental (Accidental a)
+{
+	assert (a != Accidental::kNone);
+	switch (a) {
+	case Accidental::kFlat:
+		return SMuFL::Glyph::kAccidentalFlat;
+	case Accidental::kSharp:
+		return SMuFL::Glyph::kAccidentalSharp;
+	case Accidental::kNatural:
+		return SMuFL::Glyph::kAccidentalNatural;
+	default:
+		return SMuFL::Glyph::kNumEntries;
+	}
+}
+
+} // namespace
 
 MidiScoreBar::MidiScoreBar (MidiScoreStreamView &view, ArdourCanvas::Item *parent, const ArdourCanvas::Duple &position,
                             double width)
@@ -76,40 +111,123 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 	} else {
 		double x = self.x0 + 5;
 		const SMuFL::Clef *clef = _view.clef();
+		const SMuFL::KeySignature *ks = _view.key_signature();
 		double ld = _view.line_distance();
-        // simplest algorithm:
-        // A: convert notes to position+accidentals
-        // B:
-        //  - make list of (timestamp-rounded-to-small-number, notes-on-at-time)
-        //  - then iterate over that list, emitting notes and rests as needed
 
+		// simplest algorithm:
+		// A: convert notes to position+accidentals
+		// B:
+		//  - make list of (timestamp-rounded-to-small-number, notes-on-at-time)
+		//  - then iterate over that list, emitting notes and rests as needed
+
+		// start out with no accidentals
+		std::map<int, Accidental> accidentals;
+		std::vector<Chord> chords;
 		for (const auto &np : _notes) {
-			int position = clef ? clef->position_for_note (np.note->note()) : 4;
+			PosAndAcc pa;
+			auto note_to_render = ks->note_and_accidentals_to_render (np.note->note());
+			pa.position = clef ? clef->position_for_note (note_to_render.note) : 4;
+			// go from "something" to "none" is problematic
+			Accidental &a = accidentals[pa.position];
+			if (a != note_to_render.accidental) {
+				a = note_to_render.accidental;
+				if (a == Accidental::kNone) {
+					// Going from soemthing to none means we're going back to the key signature.
+					// That means we do need an accidental.
+					if (ks->flats_or_sharps_count() < 0) {
+						pa.accidental = Accidental::kFlat;
+					} else {
+						pa.accidental = Accidental::kSharp;
+					}
+				} else {
+					pa.accidental = a;
+				}
+			}
 
+			Chord c;
+			c.position = np.note->time() + np.offset;
+			c.duration = np.note->length();
+			c.notes.push_back (pa);
+			chords.push_back (c);
+		}
+
+		for (const auto &c : chords) {
 			SMuFL::Glyph note_head_glyph = SMuFL::Glyph::kNoteheadBlack;
 			std::string s = SMuFL::GlyphAsUTF8 (note_head_glyph);
-			Cairo::TextExtents extents;
-			cr->get_text_extents (s, extents);
-			double y = self.y1 - position * _view.line_distance() / 2;
-			cr->move_to (x, y);
-			cr->show_text (s);
+			Cairo::TextExtents note_extents;
+			cr->get_text_extents (s, note_extents);
 
+			double x_offset = 0;
+			for (const auto &n : c.notes) {
+				if (n.accidental == Accidental::kNone)
+					continue;
+
+				auto g = glyph_for_accidental (n.accidental);
+				std::string gs = SMuFL::GlyphAsUTF8 (g);
+				Cairo::TextExtents acc_extents;
+				cr->get_text_extents (gs, acc_extents);
+				x_offset = std::max (x_offset, acc_extents.width + 4);
+
+				double y = self.y1 - n.position * _view.line_distance() / 2;
+				cr->move_to (x, y);
+				cr->show_text (gs);
+			}
+			x += x_offset;
+
+			int bottom_line = 0;
+			int top_line = 4;
+
+			int top_note_position = -9999;
+			int bottom_note_position = 9999;
+
+			for (const auto &n : c.notes) {
+				top_note_position = std::max (top_note_position, n.position);
+				bottom_note_position = std::min (bottom_note_position, n.position);
+
+				// Leger lines
+				cr->set_line_width (0.16 * ld);
+				double extension = 0.35 * ld;
+				for (int i = n.position / 2; i < bottom_line; ++i) {
+					double y = self.y1 - i * _view.line_distance();
+					cr->move_to (x - extension, y);
+					cr->line_to (x + note_extents.width + extension, y);
+					cr->stroke();
+				}
+				for (int i = top_line + 1; i <= n.position / 2; ++i) {
+					double y = self.y1 - i * _view.line_distance();
+					cr->move_to (x - extension, y);
+					cr->line_to (x + note_extents.width + extension, y);
+					cr->stroke();
+				}
+				bottom_line = std::min (bottom_line, n.position / 2);
+				top_line = std::max (top_line, n.position / 2);
+
+				// Note head
+				double y = self.y1 - n.position * ld / 2;
+				cr->move_to (x, y);
+				cr->show_text (s);
+			}
+
+			// Chord stem
 			double stem_width = 0.1 * ld;
 			cr->set_line_width (stem_width);
-			if (position > 4) {
+			bool stem_down = top_note_position > 4;
+			double top_y = self.y1 - top_note_position * ld / 2;
+			double bottom_y = self.y1 - bottom_note_position * ld / 2;
+			if (stem_down) {
 				// down
 				double stemx = 0.0 + 0.5 * stem_width;
-				cr->move_to (x + stemx, y + 0.168 * ld);
-				cr->line_to (x + stemx, y + 4 * ld);
+				cr->move_to (x + stemx, top_y + 0.168 * ld);
+				cr->line_to (x + stemx, bottom_y + 4 * ld);
 			} else {
 				// up
 				double stemx = 1.3 * ld - 0.5 * stem_width;
-				cr->move_to (x + stemx, y - 0.16 * ld);
-				cr->line_to (x + stemx, y - 4 * ld);
+				cr->move_to (x + stemx, bottom_y - 0.16 * ld);
+				cr->line_to (x + stemx, top_y - 4 * ld);
 			}
 			cr->stroke();
 
-			x += extents.width + 5;
+			x += note_extents.width + 10;
 		}
 	}
 }
