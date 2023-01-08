@@ -18,8 +18,9 @@
 
 #include "midi_score_header.h"
 
-#include "smufl/glyph.h"
 #include "smufl/clefs.h"
+#include "smufl/glyph.h"
+#include "smufl/key_signature.h"
 
 #include "midi_score_streamview.h"
 
@@ -84,10 +85,47 @@ MidiScoreHeader::on_expose_event (GdkEventExpose *ev)
 		cr->show_text (ts_top);
 	}
 
-	// TODO: key signature
-
 	const SMuFL::Clef *clef = _view.clef();
 	if (clef) {
+		uint8_t lowest = clef->lowest_note_on_bar();
+
+		const SMuFL::KeySignature *ks = _view.key_signature();
+		if (ks) {
+			x -= 5;
+
+			std::vector<uint8_t> sharps = ks->sharps();
+			std::string sharp = SMuFL::GlyphAsUTF8 (SMuFL::Glyph::kAccidentalSharp);
+			Cairo::TextExtents sharp_extents;
+			cr->get_text_extents (sharp, sharp_extents);
+			for (int i = sharps.size() - 1; i >= 0; --i) {
+				x -= sharp_extents.width;
+				uint8_t note = sharps[i];
+				while (note < lowest)
+					note += 12;
+				int pos = clef->position_for_note (note);
+				if (pos < clef->key_signature_sharp_offset)
+					pos += 7;
+				cr->move_to (x, bottom_line - line_distance / 2 * pos);
+				cr->show_text (sharp);
+			}
+
+			std::vector<uint8_t> flats = ks->flats();
+			std::string flat = SMuFL::GlyphAsUTF8 (SMuFL::Glyph::kAccidentalFlat);
+			Cairo::TextExtents flat_extents;
+			cr->get_text_extents (flat, flat_extents);
+			for (int i = flats.size() - 1; i >= 0; --i) {
+				x -= flat_extents.width;
+				uint8_t note = flats[i];
+				while (note < lowest)
+					note += 12;
+				int pos = clef->position_for_note (note);
+				if (pos < clef->key_signature_flat_offset)
+					pos += 7;
+				cr->move_to (x, bottom_line - line_distance / 2 * pos);
+				cr->show_text (flat);
+			}
+		}
+
 		std::string s = SMuFL::GlyphAsUTF8 (clef->glyph);
 		Cairo::TextExtents extents;
 		cr->get_text_extents (s, extents);

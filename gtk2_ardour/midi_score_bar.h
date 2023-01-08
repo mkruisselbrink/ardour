@@ -21,11 +21,20 @@
 
 #include "canvas/item.h"
 
+#include "ardour/midi_model.h"
+
 class MidiScoreStreamView;
 
 class MidiScoreBar : public ArdourCanvas::Item
 {
 public:
+    using NotePtr = ARDOUR::MidiModel::NotePtr;
+    struct Note {
+        NotePtr note;
+        Temporal::Beats offset;
+    };
+    using NoteList = std::vector<Note>;
+
 	MidiScoreBar (MidiScoreStreamView &view, ArdourCanvas::Item *parent, const ArdourCanvas::Duple &position,
 	              double width);
 
@@ -35,9 +44,21 @@ public:
 	void render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Context> cr) const override;
 	void compute_bounding_box() const override;
 
+    void set_first_beat(Temporal::Beats beat) { _beat = beat; }
+    const Temporal::Beats& first_beat() const { return _beat; }
+    void set_beat_length(Temporal::Beats length) { _beat_length = length; }
+    const Temporal::Beats& beat_leants() const { return _beat_length; }
+
+    // Removes all contents from this bar.
+    void clear();
+    void add_note(Temporal::Beats offset, NotePtr note);
+    
 private:
 	MidiScoreStreamView &_view;
 	double _width;
+    Temporal::Beats _beat, _beat_length;
+    NoteList _notes;
+    bool _dirty = false;
 };
 
 #endif // __gtk_ardour_midi_score_bar_h__

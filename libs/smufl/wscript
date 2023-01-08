@@ -28,6 +28,7 @@ smufl_sources = [
     'clefs.cc',
     'font_data.cc',
     'glyph.cc',
+    'key_signature.cc',
 ]
 
 def options(opt):
@@ -82,6 +83,7 @@ def build(bld):
         obj              = bld(features = 'cxx cxxprogram')
         obj.source       = [
                 'test/clefs_test.cc',
+                'test/key_signature_test.cc',
                 'test/testrunner.cc',
                 ]
         obj.includes     = ['.']

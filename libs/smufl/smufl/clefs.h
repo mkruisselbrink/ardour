@@ -25,27 +25,39 @@ namespace SMuFL
 {
 
 struct Clef {
-    const char* const name;
-    const Glyph glyph;
-    // 0 = bottom line, 8 = top line
-    const int clef_position;
-    // midi note number at position
-    const uint8_t clef_note;
+	const char *const name;
+	const Glyph glyph;
+	// 0 = bottom line, 8 = top line
+	const int clef_position;
+	// midi note number at position
+	const uint8_t clef_note;
+	// how low the lowest key signature sharp should be above the bottom line
+	const uint8_t key_signature_sharp_offset = 0;
+	// how low the lowest key signature flat should be above the bottom line
+	const uint8_t key_signature_flat_offset = 0;
 
-    uint8_t note_for_position(int note_pos) const;
-    int position_for_note(uint8_t note) const;
+	uint8_t note_for_position (int note_pos) const;
+	int position_for_note (uint8_t note) const;
 
-    uint8_t lowest_note_on_bar() const { return note_for_position(0); }
-    uint8_t highest_note_on_bar() const { return note_for_position(8); };
+	uint8_t
+	lowest_note_on_bar() const
+	{
+		return note_for_position (0);
+	}
+	uint8_t
+	highest_note_on_bar() const
+	{
+		return note_for_position (8);
+	};
 
-    int notes_on_bar(uint8_t note_min, uint8_t note_max) const;
+	int notes_on_bar (uint8_t note_min, uint8_t note_max) const;
 
-    static Clef treble_clef;
-    static Clef bass_clef;
+	static Clef treble_clef;
+	static Clef bass_clef;
 };
 
 // Terminated by nullptr.
-extern Clef* g_clefs[];
+extern Clef *g_clefs[];
 
 } // namespace SMuFL
 

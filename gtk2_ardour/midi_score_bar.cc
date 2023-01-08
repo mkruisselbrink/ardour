@@ -18,6 +18,7 @@
 
 #include "midi_score_bar.h"
 
+#include "smufl/clefs.h"
 #include "smufl/glyph.h"
 
 #include "midi_score_streamview.h"
@@ -65,13 +66,51 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 	cr->select_font_face ("Leland", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
 	cr->set_font_size (_view.line_distance() * 4);
 
-	{
+	if (_notes.empty()) {
 		Cairo::TextExtents extents;
 		std::string s = SMuFL::GlyphAsUTF8 (SMuFL::Glyph::kRestWhole);
 		cr->get_text_extents (s, extents);
 		cr->move_to ((self.x1 - self.x0) / 2 + self.x0 - extents.width / 2,
 		             self.y1 - _view.line_distance() * 3);
 		cr->show_text (s);
+	} else {
+		double x = self.x0 + 5;
+		const SMuFL::Clef *clef = _view.clef();
+		double ld = _view.line_distance();
+        // simplest algorithm:
+        // A: convert notes to position+accidentals
+        // B:
+        //  - make list of (timestamp-rounded-to-small-number, notes-on-at-time)
+        //  - then iterate over that list, emitting notes and rests as needed
+
+		for (const auto &np : _notes) {
+			int position = clef ? clef->position_for_note (np.note->note()) : 4;
+
+			SMuFL::Glyph note_head_glyph = SMuFL::Glyph::kNoteheadBlack;
+			std::string s = SMuFL::GlyphAsUTF8 (note_head_glyph);
+			Cairo::TextExtents extents;
+			cr->get_text_extents (s, extents);
+			double y = self.y1 - position * _view.line_distance() / 2;
+			cr->move_to (x, y);
+			cr->show_text (s);
+
+			double stem_width = 0.1 * ld;
+			cr->set_line_width (stem_width);
+			if (position > 4) {
+				// down
+				double stemx = 0.0 + 0.5 * stem_width;
+				cr->move_to (x + stemx, y + 0.168 * ld);
+				cr->line_to (x + stemx, y + 4 * ld);
+			} else {
+				// up
+				double stemx = 1.3 * ld - 0.5 * stem_width;
+				cr->move_to (x + stemx, y - 0.16 * ld);
+				cr->line_to (x + stemx, y - 4 * ld);
+			}
+			cr->stroke();
+
+			x += extents.width + 5;
+		}
 	}
 }
 
@@ -80,4 +119,23 @@ MidiScoreBar::compute_bounding_box() const
 {
 	_bounding_box = { 0, -_view.line_distance() * 4, _width, 0 };
 	set_bbox_clean();
+}
+
+void
+MidiScoreBar::clear()
+{
+	begin_visual_change();
+	_notes.clear();
+	_dirty = true;
+	end_visual_change();
+}
+
+void
+MidiScoreBar::add_note (Temporal::Beats offset, NotePtr note)
+{
+	std::cerr << "Bar starts at " << first_beat() << ", adding note at " << (offset + note->time()) << std::endl;
+	begin_visual_change();
+	_notes.push_back ({ note, offset });
+	_dirty = true;
+	end_visual_change();
 }

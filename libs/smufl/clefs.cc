@@ -111,8 +111,8 @@ Clef::notes_on_bar (uint8_t note_min, uint8_t note_max) const
 	return std::min (pos_max, 8) - std::max (pos_min, 0) + 1;
 }
 
-Clef Clef::treble_clef = Clef{ "Treble", Glyph::kGClef, 2, 67 };
-Clef Clef::bass_clef = Clef{ "Bass", Glyph::kFClef, 6, 53 };
+Clef Clef::treble_clef = Clef{ "Treble", Glyph::kGClef, 2, 67, 3, 1 };
+Clef Clef::bass_clef = Clef{ "Bass", Glyph::kFClef, 6, 53, 1, 0 };
 
 Clef *g_clefs[] = { &Clef::treble_clef, &Clef::bass_clef, nullptr };
 

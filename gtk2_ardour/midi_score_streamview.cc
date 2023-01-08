@@ -35,7 +35,8 @@
 #include "ui_config.h"
 
 MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
-    : StreamView (*dynamic_cast<RouteTimeAxisView *> (tv.get_parent()), tv.canvas_display()), _time_axis_view (tv)
+    : StreamView (*dynamic_cast<RouteTimeAxisView *> (tv.get_parent()), tv.canvas_display()), _time_axis_view (tv),
+      _key_signature (-7)
 {
 	_bar_lines = new ArdourCanvas::LineSet (_canvas_group, ArdourCanvas::LineSet::Horizontal);
 	_bar_lines->lower_to_bottom();
@@ -59,6 +60,10 @@ MidiScoreStreamView::~MidiScoreStreamView()
 void
 MidiScoreStreamView::redisplay_track()
 {
+	for (const auto &b : _bars) {
+		b->clear();
+	}
+
 	// Load models if necessary, and find note range of all our contents.
 	_range_dirty = false;
 	_data_note_min = 127;
@@ -91,6 +96,36 @@ MidiScoreStreamView::redisplay_track()
 	}
 
 	update_bars();
+
+	_trackview.track()->playlist()->foreach_region (
+	    sigc::mem_fun (*this, &MidiScoreStreamView::update_region_contents));
+}
+
+void
+MidiScoreStreamView::update_region_contents (boost::shared_ptr<ARDOUR::Region> r)
+{
+	boost::shared_ptr<ARDOUR::MidiRegion> mr = boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (r);
+	if (!mr)
+		return;
+
+	Temporal::Beats offset = r->position().beats();
+	ARDOUR::Source::ReaderLock lm (mr->midi_source()->mutex());
+	const ARDOUR::MidiModel::Notes &notes = mr->model()->notes();
+	auto bar_it = _bars.begin();
+	for (const ARDOUR::MidiModel::NotePtr &note : notes) {
+		std::cerr << "Note: " << int{ note->note() } << " with length " << note->length() << " at time "
+			  << note->time() << std::endl;
+
+		Temporal::Beats note_time = note->time() + offset;
+
+		auto next_bar = bar_it;
+		while (next_bar != _bars.end() && (*next_bar)->first_beat() <= note_time) {
+			bar_it = next_bar;
+			next_bar++;
+		}
+		// Now `bar_it` should point at the right bar.
+		(*bar_it)->add_note (offset, note);
+	}
 }
 
 void
@@ -99,7 +134,7 @@ MidiScoreStreamView::update_contents_metrics (boost::shared_ptr<ARDOUR::Region> 
 	boost::shared_ptr<ARDOUR::MidiRegion> mr = boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (r);
 
 	if (mr) {
-		ARDOUR::Source::ReaderLock lm (mr->midi_source (0)->mutex());
+		ARDOUR::Source::ReaderLock lm (mr->midi_source()->mutex());
 		_range_dirty = update_data_note_range (mr->model()->lowest_note(), mr->model()->highest_note());
 		Temporal::timepos_t end = mr->end();
 		if (end > _data_last_time) {
@@ -183,6 +218,7 @@ MidiScoreStreamView::update_bar_lines()
 void
 MidiScoreStreamView::update_bars()
 {
+	_bars_by_beats.clear();
 	// update position and size of all bars
 	// TBD: maybe hide ones that are offscreen?
 	Temporal::TempoMap::SharedPtr tmap (Temporal::TempoMap::use());
@@ -194,6 +230,7 @@ MidiScoreStreamView::update_bars()
 	Temporal::TempoMapPoints grid;
 	tmap->get_grid (grid, 0, tmap->superclock_at (rightmost_bar), /*bar_mod=*/1);
 	double last_pos = 0;
+	Temporal::Beats last_bar_start;
 	size_t last_bar = 0;
 	for (const auto &p : grid) {
 		size_t bar = p.bbt().bars - 1;
@@ -203,6 +240,7 @@ MidiScoreStreamView::update_bars()
 		if (bar > 0 && bar - 1 < _bars.size()) {
 			std::cerr << "Resizing to " << (pos - last_pos) << std::endl;
 			_bars[bar - 1]->set_width (pos - last_pos);
+			_bars[bar - 1]->set_beat_length (last_bar_start - p.beats());
 		}
 		if (bar >= _bars.size()) {
 			_bars.push_back (std::make_unique<MidiScoreBar> (
@@ -212,6 +250,9 @@ MidiScoreStreamView::update_bars()
 			last_pos = pos;
 			_bars[bar]->set_x_position (pos);
 		}
+		last_bar_start = p.beats();
+		_bars[bar]->set_first_beat (last_bar_start);
+		_bars_by_beats[p.beats()] = _bars[bar].get();
 	}
 
 	if (_bars.size() > last_bar) {
