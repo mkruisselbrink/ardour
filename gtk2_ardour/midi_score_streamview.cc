@@ -30,7 +30,6 @@
 #include "smufl/glyph.h"
 
 #include "gui_thread.h"
-#include "midi_score_region_view.h"
 #include "midi_score_time_axis.h"
 #include "public_editor.h"
 #include "route_time_axis.h"
@@ -169,25 +168,6 @@ MidiScoreStreamView::redisplay_track()
 	}
 
 	update_bars();
-
-	std::vector<RegionView::DisplaySuspender> vds;
-	// Flag region views as invalid and disable drawing
-	for (auto i = region_views.begin(); i != region_views.end(); ++i) {
-		(*i)->set_valid (false);
-		vds.push_back (RegionView::DisplaySuspender (**i, false));
-	}
-
-	// Add and display region views, and flag them as valid
-	_trackview.track()->playlist()->foreach_region (
-	    sigc::hide_return (sigc::mem_fun (*this, &StreamView::add_region_view)));
-
-	// Stack regions by layer, and remove invalid regions
-	layer_regions();
-
-	std::cerr << "Redisplaying track, region count: " << region_views.size() << std::endl;
-	// for (std::list<RegionView *>::iterator i = region_views.begin(); i != region_views.end(); ++i) {
-	//	((MidiScoreRegionView *)(*i))->redisplay();
-	// }
 }
 
 void
@@ -237,64 +217,6 @@ RegionView *
 MidiScoreStreamView::add_region_view_internal (boost::shared_ptr<ARDOUR::Region> r, bool wait_for_data, bool recording)
 {
 	return nullptr;
-
-	boost::shared_ptr<ARDOUR::MidiRegion> region = boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (r);
-	if (!region) {
-		return nullptr;
-	}
-
-	for (std::list<RegionView *>::iterator i = region_views.begin(); i != region_views.end(); ++i) {
-		if ((*i)->region() == r) {
-
-			/* great. we already have a MidiScoreRegionView for this Region. use it again. */
-
-			(*i)->set_valid (true);
-			display_region (dynamic_cast<MidiScoreRegionView *> (*i));
-
-			return 0;
-		}
-	}
-
-	MidiScoreRegionView *region_view = create_region_view (r, wait_for_data, recording);
-	if (!region_view) {
-		return nullptr;
-	}
-
-	region_views.push_front (region_view);
-	display_region (region_view);
-
-	/* catch regionview going away */
-
-	boost::weak_ptr<ARDOUR::Region> wr (region); // make this explicit
-	region->DropReferences.connect (*this, invalidator (*this),
-	                                boost::bind (&MidiScoreStreamView::remove_region_view, this, wr),
-	                                gui_context());
-
-	RegionViewAdded (region_view);
-
-	return region_view;
-}
-
-void
-MidiScoreStreamView::display_region (MidiScoreRegionView *region_view)
-{
-}
-
-MidiScoreRegionView *
-MidiScoreStreamView::create_region_view (boost::shared_ptr<ARDOUR::Region> r, bool wait_for_waves, bool recording)
-{
-	return nullptr;
-	boost::shared_ptr<ARDOUR::MidiRegion> region = boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (r);
-	if (!region) {
-		return nullptr;
-	}
-
-	MidiScoreRegionView *region_view
-	    = new MidiScoreRegionView (_canvas_group, _trackview, region, _samples_per_pixel, region_color);
-
-	region_view->init (false);
-
-	return region_view;
 }
 
 void

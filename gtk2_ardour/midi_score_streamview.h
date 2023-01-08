@@ -19,7 +19,6 @@
 #ifndef __gtk_ardour_midi_score_streamview_h__
 #define __gtk_ardour_midi_score_streamview_h__
 
-#include "midi_score_region_view.h"
 #include "streamview.h"
 
 namespace ArdourCanvas
@@ -45,13 +44,10 @@ public:
 	void setup_rec_box() override;
 	RegionView *add_region_view_internal (boost::shared_ptr<ARDOUR::Region>, bool wait_for_data,
 	                                      bool recording = false) override;
-	MidiScoreRegionView *create_region_view (boost::shared_ptr<ARDOUR::Region>, bool wait_for_data,
-	                                         bool recording) override;
 	void color_handler() override;
 	void update_contents_metrics (boost::shared_ptr<ARDOUR::Region> r) override;
 	int set_samples_per_pixel (double fpp) override;
 	bool update_data_note_range (uint8_t min, uint8_t max);
-	void display_region (MidiScoreRegionView *region_view);
 	void update_contents_height();
 	void update_bar_lines();
 
