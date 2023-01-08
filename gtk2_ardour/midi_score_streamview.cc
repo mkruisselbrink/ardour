@@ -26,90 +26,13 @@
 #include "ardour/midi_source.h"
 
 #include "smufl/clefs.h"
-#include "smufl/font_data.h"
-#include "smufl/glyph.h"
 
 #include "gui_thread.h"
+#include "midi_score_bar.h"
 #include "midi_score_time_axis.h"
 #include "public_editor.h"
 #include "route_time_axis.h"
 #include "ui_config.h"
-
-class MidiScoreBar : public ArdourCanvas::Item
-{
-public:
-	MidiScoreBar (MidiScoreStreamView &view, ArdourCanvas::Item *parent, const ArdourCanvas::Duple &position,
-	              double width)
-	    : ArdourCanvas::Item (parent, position), _view (view), _width (width)
-	{
-		/*_rest = new ArdourCanvas::Text (this);
-		_rest->set_position ({_width / 2, 0});
-		_rest->set (SMuFL::GlyphAsUTF8(SMuFL::Glyph::kRestWhole));
-		Pango::FontDescription font;
-		font.set_family("Leland");
-		font.set_size(40);
-		_rest->set_font_description(font);*/
-	}
-
-	void
-	line_distance_changed()
-	{
-		// TODO: bounding box should be full height, so this shouldn't effect bounding box
-		begin_change();
-		compute_bounding_box();
-		end_change();
-	}
-
-	void
-	set_width (double w)
-	{
-		if (w == _width)
-			return;
-		begin_change();
-		_width = w;
-		compute_bounding_box();
-		end_change();
-	}
-
-	void
-	render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Context> cr) const override
-	{
-		ArdourCanvas::Rect self
-		    = item_to_window (ArdourCanvas::Rect (0, -_view.line_distance() * 4, _width, 0));
-		ArdourCanvas::Rect isect = self.intersection (area);
-		if (!isect)
-			return;
-
-		cr->set_source_rgb (0, 0, 0);
-		cr->set_line_width (1);
-		cr->move_to (self.x1 - 0.5, self.y0);
-		cr->line_to (self.x1 - 0.5, self.y1);
-		cr->stroke();
-
-		cr->select_font_face ("Leland", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
-		cr->set_font_size (_view.line_distance() * 4);
-
-		{
-			Cairo::TextExtents extents;
-			std::string s = SMuFL::GlyphAsUTF8 (SMuFL::Glyph::kRestWhole);
-			cr->get_text_extents (s, extents);
-			cr->move_to ((self.x1 - self.x0) / 2 + self.x0 - extents.width / 2,
-			             self.y1 - _view.line_distance() * 3);
-			cr->show_text (s);
-		}
-	}
-
-	void
-	compute_bounding_box() const override
-	{
-		_bounding_box = { 0, -_view.line_distance() * 4, _width, 0 };
-		set_bbox_clean();
-	}
-
-private:
-	MidiScoreStreamView &_view;
-	double _width;
-};
 
 MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
     : StreamView (*dynamic_cast<RouteTimeAxisView *> (tv.get_parent()), tv.canvas_display()), _time_axis_view (tv)
@@ -238,7 +161,7 @@ MidiScoreStreamView::update_contents_height()
 	_line_distance = total_bar_height / 4;
 	_bottom_line = child_height() / 3 + total_bar_height;
 
-	for (const auto& b : _bars) {
+	for (const auto &b : _bars) {
 		b->set_y_position (_bottom_line);
 		b->line_distance_changed();
 	}
