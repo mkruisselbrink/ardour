@@ -29,6 +29,7 @@
 #include "widgets/tooltips.h"
 
 #include "midi_score_streamview.h"
+#include "public_editor.h"
 #include "utils.h"
 
 class MidiScoreHeader : public Gtk::DrawingArea
@@ -41,12 +42,21 @@ public:
 	void on_size_allocate (Gtk::Allocation &a) override;
 
 	void note_range_changed();
+	void
+	set_meter (const Temporal::Meter &meter)
+	{
+		if (meter == _meter)
+			return;
+		_meter = meter;
+		queue_draw();
+	}
 
 private:
 	MidiScoreStreamView &_view;
+	Temporal::Meter _meter;
 };
 
-MidiScoreHeader::MidiScoreHeader (MidiScoreStreamView &v) : _view (v)
+MidiScoreHeader::MidiScoreHeader (MidiScoreStreamView &v) : _view (v), _meter (4, 4)
 {
 	//_view.NoteRangeChanged.connect (sigc::mem_fun (*this, &PianoRollHeader::note_range_changed));
 }
@@ -70,7 +80,7 @@ MidiScoreHeader::on_expose_event (GdkEventExpose *ev)
 	cr->set_source_rgb (0, 0, 0);
 	cr->set_line_width (1);
 	for (int i = 0; i < 5; ++i) {
-		double y = round(bottom_line - line_distance * i) - 0.5;
+		double y = round (bottom_line - line_distance * i) - 0.5;
 		cr->move_to (0, y);
 		cr->line_to (get_width(), y);
 		cr->stroke();
@@ -83,8 +93,9 @@ MidiScoreHeader::on_expose_event (GdkEventExpose *ev)
 	double spacing = std::min (line_distance, 15.0);
 	double x = get_width();
 	{
-		std::string ts_top = SMuFL::GlyphAsUTF8 (SMuFL::time_signature_digits[6]);
-		std::string ts_bottom = SMuFL::GlyphAsUTF8 (SMuFL::time_signature_digits[8]);
+		// TODO: multi-digit numbers
+		std::string ts_top = SMuFL::GlyphAsUTF8 (SMuFL::time_signature_digits[_meter.divisions_per_bar()]);
+		std::string ts_bottom = SMuFL::GlyphAsUTF8 (SMuFL::time_signature_digits[_meter.note_value()]);
 		Cairo::TextExtents top_extents, bottom_extents;
 		cr->get_text_extents (ts_top, top_extents);
 		cr->get_text_extents (ts_bottom, bottom_extents);
@@ -152,6 +163,9 @@ MidiScoreTimeAxisView::MidiScoreTimeAxisView (ARDOUR::Session *s, boost::shared_
 	ArdourWidgets::set_tooltip (name_label, X_ (""));
 	name_label.set_text ("Score");
 	name_label.show();
+
+	_editor.HorizontalPositionChanged.connect (
+	    sigc::mem_fun (*this, &MidiScoreTimeAxisView::on_horizontal_position_changed));
 }
 
 MidiScoreTimeAxisView::~MidiScoreTimeAxisView()
@@ -193,4 +207,24 @@ std::string
 MidiScoreTimeAxisView::state_id() const
 {
 	return "midi score";
+}
+
+void
+MidiScoreTimeAxisView::set_samples_per_pixel (double fpp)
+{
+	std::cerr << "Samples per pixel: " << fpp << std::endl;
+	if (_view) {
+		_view->set_samples_per_pixel (fpp);
+	}
+	TimeAxisView::set_samples_per_pixel (fpp);
+}
+
+void
+MidiScoreTimeAxisView::on_horizontal_position_changed()
+{
+	Temporal::TempoMap::SharedPtr tmap (Temporal::TempoMap::use());
+	const Temporal::MeterPoint &meter = tmap->meter_at (Temporal::timepos_t{ _editor.leftmost_sample() });
+	// std::cerr << "Horizontal position changed: " << _editor.leftmost_sample()
+	//	  << ", meter: " << meter.divisions_per_bar() << "/" << meter.note_value() << std::endl;
+	_header->set_meter (meter);
 }

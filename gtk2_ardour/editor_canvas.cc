@@ -1018,6 +1018,8 @@ Editor::set_horizontal_position (double p)
 	horizontal_adjustment.set_value (p);
 
 	_leftmost_sample = (samplepos_t) floor (p * samples_per_pixel);
+
+	HorizontalPositionChanged (); /* EMIT_SIGNAL */
 }
 
 void

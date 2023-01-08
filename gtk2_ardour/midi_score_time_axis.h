@@ -42,8 +42,11 @@ public:
 	Gdk::Color color() const override;
 	boost::shared_ptr<ARDOUR::Stripable> stripable() const override;
 	std::string state_id() const override;
+	void set_samples_per_pixel (double fpp) override;
 
 private:
+	void on_horizontal_position_changed();
+
 	boost::shared_ptr<ARDOUR::Stripable> _stripable;
 	bool _first_call_to_set_height = true;
 

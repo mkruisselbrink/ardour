@@ -32,6 +32,7 @@
 #include "gui_thread.h"
 #include "midi_score_region_view.h"
 #include "midi_score_time_axis.h"
+#include "public_editor.h"
 #include "route_time_axis.h"
 #include "ui_config.h"
 
@@ -56,6 +57,18 @@ public:
 	{
 		// TODO: bounding box should be full height, so this shouldn't effect bounding box
 		begin_change();
+		compute_bounding_box();
+		end_change();
+	}
+
+	void
+	set_width (double w)
+	{
+		if (w == _width)
+			return;
+		begin_change();
+		_width = w;
+		compute_bounding_box();
 		end_change();
 	}
 
@@ -106,8 +119,6 @@ MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
 	_bar_lines->lower_to_bottom();
 	canvas_rect->lower_to_bottom();
 
-	_bar = new MidiScoreBar (*this, _canvas_group, { 10, 10 }, 300);
-	_bar2 = new MidiScoreBar (*this, _canvas_group, { 310, 10 }, 300);
 	// std::cerr << SMuFL::GlyphDescription(SMuFL::Glyph::kFClef) << std::endl;
 	// SMuFL::FontData fd;
 	// fd.LoadFromJSON("/home/mek/Source/ardour7/libs/smufl/fonts/Leland/leland_metadata.json");
@@ -130,6 +141,7 @@ MidiScoreStreamView::redisplay_track()
 	_range_dirty = false;
 	_data_note_min = 127;
 	_data_note_max = 0;
+	_data_last_time = {};
 	_trackview.track()->playlist()->foreach_region (
 	    sigc::mem_fun (*this, &MidiScoreStreamView::update_contents_metrics));
 
@@ -140,6 +152,12 @@ MidiScoreStreamView::redisplay_track()
 		std::cerr << "Using default range" << std::endl;
 	}
 	std::cerr << "Note range: " << int{ _data_note_min } << " - " << int{ _data_note_max } << std::endl;
+	std::cerr << "Time range: " << _data_last_time << " which is " << _data_last_time.beats().get_beats()
+		  << " Beats" << std::endl;
+
+	Temporal::TempoMap::SharedPtr tmap (Temporal::TempoMap::use());
+	Temporal::BBT_Time bbt = tmap->bbt_at (_data_last_time);
+	std::cerr << "Last bar: " << bbt.bars << std::endl;
 
 	int bass_note_range = SMuFL::Clef::bass_clef.notes_on_bar (_data_note_min, _data_note_max);
 	int treble_note_range = SMuFL::Clef::treble_clef.notes_on_bar (_data_note_min, _data_note_max);
@@ -149,6 +167,8 @@ MidiScoreStreamView::redisplay_track()
 	} else {
 		_clef = &SMuFL::Clef::treble_clef;
 	}
+
+	update_bars();
 
 	std::vector<RegionView::DisplaySuspender> vds;
 	// Flag region views as invalid and disable drawing
@@ -178,7 +198,19 @@ MidiScoreStreamView::update_contents_metrics (boost::shared_ptr<ARDOUR::Region> 
 	if (mr) {
 		ARDOUR::Source::ReaderLock lm (mr->midi_source (0)->mutex());
 		_range_dirty = update_data_note_range (mr->model()->lowest_note(), mr->model()->highest_note());
+		Temporal::timepos_t end = mr->end();
+		if (end > _data_last_time) {
+			_data_last_time = end;
+		}
 	}
+}
+
+int
+MidiScoreStreamView::set_samples_per_pixel (double fpp)
+{
+	int result = StreamView::set_samples_per_pixel (fpp);
+	update_bars();
+	return result;
 }
 
 bool
@@ -284,10 +316,10 @@ MidiScoreStreamView::update_contents_height()
 	_line_distance = total_bar_height / 4;
 	_bottom_line = child_height() / 3 + total_bar_height;
 
-	_bar->set_y_position (_bottom_line);
-	_bar->line_distance_changed();
-	_bar2->set_y_position (_bottom_line);
-	_bar2->line_distance_changed();
+	for (const auto& b : _bars) {
+		b->set_y_position (_bottom_line);
+		b->line_distance_changed();
+	}
 
 	update_bar_lines();
 }
@@ -300,5 +332,44 @@ MidiScoreStreamView::update_bar_lines()
 	for (int i = 0; i < 5; ++i) {
 		double y = _bottom_line - _line_distance * i;
 		_bar_lines->add_coord (y, 1.0, 0x000000ff);
+	}
+}
+
+void
+MidiScoreStreamView::update_bars()
+{
+	// update position and size of all bars
+	// TBD: maybe hide ones that are offscreen?
+	Temporal::TempoMap::SharedPtr tmap (Temporal::TempoMap::use());
+
+	// Make sure we get at least until the next bar.
+	const Temporal::BBT_Time rightmost_bar = tmap->bbt_at (_data_last_time).round_up_to_bar().next_bar();
+	const samplecnt_t sr = _time_axis_view.editor().session()->sample_rate();
+
+	Temporal::TempoMapPoints grid;
+	tmap->get_grid (grid, 0, tmap->superclock_at (rightmost_bar), /*bar_mod=*/1);
+	double last_pos = 0;
+	size_t last_bar = 0;
+	for (const auto &p : grid) {
+		size_t bar = p.bbt().bars - 1;
+		last_bar = bar;
+		double pos = _time_axis_view.editor().sample_to_pixel (p.sample (sr));
+		std::cerr << "Bar: " << p.bbt().bars << ", sample: " << p.sample (sr) << ", pos: " << pos << std::endl;
+		if (bar > 0 && bar - 1 < _bars.size()) {
+			std::cerr << "Resizing to " << (pos - last_pos) << std::endl;
+			_bars[bar - 1]->set_width (pos - last_pos);
+		}
+		if (bar >= _bars.size()) {
+			_bars.push_back (std::make_unique<MidiScoreBar> (
+			    *this, _canvas_group, ArdourCanvas::Duple{ pos, _bottom_line }, pos - last_pos));
+		} else {
+			std::cerr << "Moving" << std::endl;
+			last_pos = pos;
+			_bars[bar]->set_x_position (pos);
+		}
+	}
+
+	if (_bars.size() > last_bar) {
+		_bars.resize (last_bar);
 	}
 }

@@ -29,7 +29,7 @@ class LineSet;
 
 namespace SMuFL
 {
-	class Clef;
+class Clef;
 }
 
 class MidiScoreTimeAxisView;
@@ -49,23 +49,37 @@ public:
 	                                         bool recording) override;
 	void color_handler() override;
 	void update_contents_metrics (boost::shared_ptr<ARDOUR::Region> r) override;
+	int set_samples_per_pixel (double fpp) override;
 	bool update_data_note_range (uint8_t min, uint8_t max);
 	void display_region (MidiScoreRegionView *region_view);
 	void update_contents_height();
 	void update_bar_lines();
 
-	double bottom_line() const { return _bottom_line; }
-	double line_distance() const { return _line_distance; }
+	void update_bars();
 
-	const SMuFL::Clef* clef() const { return _clef; }
+	double
+	bottom_line() const
+	{
+		return _bottom_line;
+	}
+	double
+	line_distance() const
+	{
+		return _line_distance;
+	}
+
+	const SMuFL::Clef *
+	clef() const
+	{
+		return _clef;
+	}
 
 private:
 	MidiScoreTimeAxisView &_time_axis_view;
 
 	ArdourCanvas::LineSet *_bar_lines = nullptr;
 
-	MidiScoreBar* _bar = nullptr;
-	MidiScoreBar* _bar2 = nullptr;
+	std::vector<std::unique_ptr<MidiScoreBar>> _bars;
 
 	double _line_distance = 10;
 	double _bottom_line = 50;
@@ -73,8 +87,9 @@ private:
 	bool _range_dirty = false;
 	uint8_t _data_note_min = 127;
 	uint8_t _data_note_max = 0;
+	Temporal::timepos_t _data_last_time;
 
-	SMuFL::Clef* _clef = nullptr;
+	SMuFL::Clef *_clef = nullptr;
 };
 
 #endif /* __gtk_ardour_midi_score_streamview_h__ */
