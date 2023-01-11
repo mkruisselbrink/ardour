@@ -158,6 +158,10 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 		//  - make list of (timestamp-rounded-to-small-number, notes-on-at-time)
 		//  - then iterate over that list, emitting notes and rests as needed
 
+		// need a time signature class, which not only has the total time,
+		// but also subdivisions. I.e. 6/8 is dotted-quarter+dotted-quarter,
+		// while 4/4 is quarters
+
 		// TODO: separate out layout from rendering
 
 		// start out with no accidentals
@@ -186,9 +190,11 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 
 			Chord c;
 			// TODO: something better than rounding to 32nd
-			c.position = (np.note->time() + np.offset).round_to_subdivision (8, Temporal::RoundNearest);
-			c.duration = np.note->length().round_to_subdivision (8, Temporal::RoundNearest);
-
+			c.position = (np.note->time() + np.offset).round_to_subdivision (4, Temporal::RoundNearest);
+			c.duration = np.note->length().round_to_subdivision (4, Temporal::RoundNearest);
+			if (c.duration < Beats (0, Temporal::ticks_per_beat / 4)) {
+				c.duration = Beats (0, Temporal::ticks_per_beat / 4);
+			}
 			if (!chords.empty() && chords.back().position == c.position
 			    && chords.back().duration == c.duration) {
 				chords.back().notes.push_back (pa);
@@ -211,10 +217,10 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 			// Fill in gap with rests
 			if (c.position > last_end) {
 				Beats rest_length = c.position - last_end;
-				std::cerr << rest_length << " worth of rests" << std::endl;
+				//std::cerr << rest_length << " worth of rests" << std::endl;
 				// TODO: take time signature into account, and round to whole beats first etc.
 				for (const auto &r : kRests) {
-					std::cerr << "Checking for " << r.b << " as rest." << std::endl;
+					//std::cerr << "Checking for " << r.b << " as rest." << std::endl;
 					while (rest_length >= r.b) {
 						rest_length -= r.b;
 
@@ -333,6 +339,8 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 					double stemx = 0.0 + 0.5 * stem_width;
 					if (has_notes_on_right)
 						stemx += right_note_offset;
+					// TODO: depending on where the top-note is, this migth have to use the other
+					// corner of the note head
 					cr->move_to (x + stemx, top_y + 0.168 * ld);
 					cr->line_to (x + stemx, bottom_y + stem_length * ld);
 

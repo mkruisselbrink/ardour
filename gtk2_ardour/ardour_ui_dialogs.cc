@@ -69,6 +69,7 @@
 #include "meterbridge.h"
 #include "meter_patterns.h"
 #include "monitor_section.h"
+#include "midi_score_page.h"
 #include "midi_tracer.h"
 #include "mini_timeline.h"
 #include "mixer_ui.h"
@@ -482,6 +483,10 @@ ARDOUR_UI::step_up_through_tabs ()
 		candidates.push_back (trigger_page);
 	}
 
+	if (score_page->tabbed()) {
+		candidates.push_back (score_page);
+	}
+
 	if (rc_option_editor->tabbed()) {
 		candidates.push_back (rc_option_editor);
 	}
@@ -529,6 +534,10 @@ ARDOUR_UI::step_down_through_tabs ()
 
 	if (trigger_page->tabbed()) {
 		candidates.push_back (trigger_page);
+	}
+
+	if (score_page->tabbed()) {
+		candidates.push_back(score_page);
 	}
 
 	if (rc_option_editor->tabbed()) {
@@ -711,6 +720,10 @@ ARDOUR_UI::tabs_switch (GtkNotebookPage*, guint page)
 			trigger_page_visibility_button.set_active_state (Gtkmm2ext::Off);
 		}
 
+		if (score_page && (score_page->tabbed() || score_page->tabbed_by_default())) {
+			score_page_visibility_button.set_active_state (Gtkmm2ext::Off);
+		}
+
 	} else if (mixer && (page == (guint) _tabs.page_num (mixer->contents()))) {
 
 		if (editor && (editor->tabbed() || editor->tabbed_by_default())) {
@@ -729,6 +742,10 @@ ARDOUR_UI::tabs_switch (GtkNotebookPage*, guint page)
 
 		if (trigger_page && (trigger_page->tabbed() || trigger_page->tabbed_by_default())) {
 			trigger_page_visibility_button.set_active_state (Gtkmm2ext::Off);
+		}
+
+		if (score_page && (score_page->tabbed() || score_page->tabbed_by_default())) {
+			score_page_visibility_button.set_active_state (Gtkmm2ext::Off);
 		}
 
 	} else if (page == (guint) _tabs.page_num (rc_option_editor->contents())) {
@@ -751,6 +768,10 @@ ARDOUR_UI::tabs_switch (GtkNotebookPage*, guint page)
 			trigger_page_visibility_button.set_active_state (Gtkmm2ext::Off);
 		}
 
+		if (score_page && (score_page->tabbed() || score_page->tabbed_by_default())) {
+			score_page_visibility_button.set_active_state (Gtkmm2ext::Off);
+		}
+
 	} else if (page == (guint) _tabs.page_num (recorder->contents())) {
 
 		if (editor && (editor->tabbed() || editor->tabbed_by_default())) {
@@ -769,6 +790,10 @@ ARDOUR_UI::tabs_switch (GtkNotebookPage*, guint page)
 
 		if (trigger_page && (trigger_page->tabbed() || trigger_page->tabbed_by_default())) {
 			trigger_page_visibility_button.set_active_state (Gtkmm2ext::Off);
+		}
+
+		if (score_page && (score_page->tabbed() || score_page->tabbed_by_default())) {
+			score_page_visibility_button.set_active_state (Gtkmm2ext::Off);
 		}
 
 	} else if (page == (guint) _tabs.page_num (trigger_page->contents())) {
@@ -790,6 +815,34 @@ ARDOUR_UI::tabs_switch (GtkNotebookPage*, guint page)
 		}
 
 		trigger_page_visibility_button.set_active_state (Gtkmm2ext::ImplicitActive);
+
+		if (score_page && (score_page->tabbed() || score_page->tabbed_by_default())) {
+			score_page_visibility_button.set_active_state (Gtkmm2ext::Off);
+		}
+
+	} else if (page == (guint) _tabs.page_num (score_page->contents())) {
+
+		if (editor && (editor->tabbed() || editor->tabbed_by_default())) {
+			editor_visibility_button.set_active_state (Gtkmm2ext::Off);
+		}
+
+		if (mixer && (mixer->tabbed() || mixer->tabbed_by_default())) {
+			mixer_visibility_button.set_active_state (Gtkmm2ext::Off);
+		}
+
+		if (rc_option_editor && (rc_option_editor->tabbed() || rc_option_editor->tabbed_by_default())) {
+			prefs_visibility_button.set_active_state (Gtkmm2ext::Off);
+		}
+
+		if (recorder && (recorder->tabbed() || recorder->tabbed_by_default())) {
+			recorder_visibility_button.set_active_state (Gtkmm2ext::Off);
+		}
+
+		if (trigger_page && (trigger_page->tabbed() || trigger_page->tabbed_by_default())) {
+			trigger_page_visibility_button.set_active_state (Gtkmm2ext::Off);
+		}
+
+		score_page_visibility_button.set_active_state (Gtkmm2ext::ImplicitActive);
 
 	}
 }
@@ -886,7 +939,7 @@ ARDOUR_UI::tabbable_state_change (Tabbable& t)
 	}
 
 	if (!vis_button) {
-		assert (0);
+		//assert (0);
 		return;
 	}
 

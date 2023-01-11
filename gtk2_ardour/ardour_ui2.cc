@@ -63,6 +63,7 @@
 #include "audio_clock.h"
 #include "actions.h"
 #include "main_clock.h"
+#include "midi_score_page.h"
 #include "mixer_ui.h"
 #include "recorder_ui.h"
 #include "trigger_page.h"
@@ -342,6 +343,7 @@ ARDOUR_UI::setup_transport ()
 	prefs_visibility_button.set_related_action (ActionManager::get_action (X_("Common"), X_("change-preferences-visibility")));
 	recorder_visibility_button.set_related_action (ActionManager::get_action (X_("Common"), X_("change-recorder-visibility")));
 	trigger_page_visibility_button.set_related_action (ActionManager::get_action (X_("Common"), X_("change-trigger-visibility")));
+	score_page_visibility_button.set_related_action (ActionManager::get_action (X_("Common"), X_("change-score-visibility")));
 
 	act = ActionManager::get_action ("Transport", "ToggleAutoReturn");
 	auto_return_button.set_related_action (act);
@@ -381,6 +383,7 @@ ARDOUR_UI::setup_transport ()
 	prefs_visibility_button.signal_drag_failed().connect (sigc::bind (sigc::ptr_fun (drag_failed), rc_option_editor));
 	recorder_visibility_button.signal_drag_failed().connect (sigc::bind (sigc::ptr_fun (drag_failed), recorder));
 	trigger_page_visibility_button.signal_drag_failed().connect (sigc::bind (sigc::ptr_fun (drag_failed), trigger_page));
+	score_page_visibility_button.signal_drag_failed().connect (sigc::bind (sigc::ptr_fun (drag_failed), score_page));
 
 	_cue_rec_enable.set_name ("record enable button");
 	_cue_rec_enable.signal_clicked.connect(sigc::mem_fun(*this, &ARDOUR_UI::cue_rec_state_clicked));
@@ -395,6 +398,7 @@ ARDOUR_UI::setup_transport ()
 	prefs_visibility_button.signal_button_press_event().connect (sigc::bind (sigc::mem_fun (*this, &ARDOUR_UI::tabbable_visibility_button_press), X_("preferences")), false);
 	recorder_visibility_button.signal_button_press_event().connect (sigc::bind (sigc::mem_fun (*this, &ARDOUR_UI::tabbable_visibility_button_press), X_("recorder")), false);
 	trigger_page_visibility_button.signal_button_press_event().connect (sigc::bind (sigc::mem_fun (*this, &ARDOUR_UI::tabbable_visibility_button_press), X_("trigger")), false);
+	score_page_visibility_button.signal_button_press_event().connect (sigc::bind (sigc::mem_fun (*this, &ARDOUR_UI::tabbable_visibility_button_press), X_("score")), false);
 
 	/* setup widget style/name */
 
@@ -421,6 +425,7 @@ ARDOUR_UI::setup_transport ()
 	prefs_visibility_button.set_name (X_("page switch button"));
 	recorder_visibility_button.set_name (X_("page switch button"));
 	trigger_page_visibility_button.set_name (X_("page switch button"));
+	score_page_visibility_button.set_name (X_("page switch button"));
 
 	punch_in_button.set_name ("punch button");
 	punch_out_button.set_name ("punch button");
@@ -484,6 +489,10 @@ ARDOUR_UI::setup_transport ()
 	Gtkmm2ext::UI::instance()->set_tip (trigger_page_visibility_button,
 	                                    string_compose (_("Left-Click to show the %1 window\n"
 	                                                      "Right-click to show more options"), trigger_page->name()));
+
+	Gtkmm2ext::UI::instance()->set_tip (score_page_visibility_button,
+	                                    string_compose (_("Left-Click to show the %1 window\n"
+	                                                      "Right-click to show more options"), score_page->name()));
 
 	Gtkmm2ext::UI::instance()->set_tip (punch_in_button, _("Start recording at auto-punch start"));
 	Gtkmm2ext::UI::instance()->set_tip (punch_out_button, _("Stop recording at auto-punch end"));
@@ -557,6 +566,7 @@ ARDOUR_UI::setup_transport ()
 	button_height_size_group->add_widget (auto_return_button);
 
 	//tab selections
+	button_height_size_group->add_widget (score_page_visibility_button);
 	button_height_size_group->add_widget (trigger_page_visibility_button);
 	button_height_size_group->add_widget (recorder_visibility_button);
 	button_height_size_group->add_widget (editor_visibility_button);
@@ -696,6 +706,8 @@ ARDOUR_UI::setup_transport ()
 	++col;
 	transport_table.attach (editor_visibility_button,       TCOL, 0, 1 , FILL, SHRINK, hpadding, vpadding);
 	transport_table.attach (mixer_visibility_button,        TCOL, 1, 2 , FILL, SHRINK, hpadding, vpadding);
+	++col;
+	transport_table.attach (score_page_visibility_button,        TCOL, 0, 1 , FILL, SHRINK, hpadding, vpadding);
 	++col;
 
 	/* initialize */

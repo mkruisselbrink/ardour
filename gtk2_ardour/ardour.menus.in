@@ -658,6 +658,12 @@
         <menuitem action='attach-trigger'/>
         <menuitem action='detach-trigger'/>
       </menu>
+      <menu action='ScoreMenu'>
+        <menuitem action='show-score'/>
+        <menuitem action='hide-score'/>
+        <menuitem action='attach-score'/>
+        <menuitem action='detach-score'/>
+      </menu>
       <menu action='PrefsMenu'>
         <menuitem action='show-preferences'/>
         <menuitem action='hide-preferences'/>

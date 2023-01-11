@@ -176,6 +176,7 @@ class NSM_Client;
 class LevelMeterHBox;
 class GUIObjectState;
 class BasicUI;
+class MidiScorePage;
 
 namespace ARDOUR {
 	class ControlProtocolInfo;
@@ -435,6 +436,7 @@ private:
 	Mixer_UI*      mixer;
 	RecorderUI*    recorder;
 	TriggerPage*   trigger_page;
+	MidiScorePage* score_page;
 	Gtk::Tooltips _tooltips;
 	NSM_Client*    nsm;
 	bool          _was_dirty;
@@ -737,6 +739,7 @@ private:
 	int         create_masters ();
 	int         create_recorder ();
 	int         create_trigger_page ();
+	int         create_score_page ();
 
 	Meterbridge  *meterbridge;
 
@@ -933,6 +936,7 @@ private:
 	ArdourWidgets::ArdourButton prefs_visibility_button;
 	ArdourWidgets::ArdourButton recorder_visibility_button;
 	ArdourWidgets::ArdourButton trigger_page_visibility_button;
+	ArdourWidgets::ArdourButton score_page_visibility_button;
 
 	bool key_press_focus_accelerator_handler (Gtk::Window& window, GdkEventKey* ev, Gtkmm2ext::Bindings*);
 	bool try_gtk_accel_binding (GtkWindow* win, GdkEventKey* ev, bool translate, GdkModifierType modifier);

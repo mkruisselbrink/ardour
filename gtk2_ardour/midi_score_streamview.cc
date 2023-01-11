@@ -226,6 +226,8 @@ MidiScoreStreamView::update_bars()
 
 	// Make sure we get at least until the next bar.
 	const Temporal::BBT_Time rightmost_bar = tmap->bbt_at (_data_last_time).round_up_to_bar().next_bar();
+	std::cerr << "Last bar: " << rightmost_bar.bars << std::endl;
+	std::cerr << "Final superclock: " << tmap->superclock_at (rightmost_bar) << std::endl;
 	const samplecnt_t sr = _time_axis_view.editor().session()->sample_rate();
 
 	Temporal::TempoMapPoints grid;
@@ -237,7 +239,7 @@ MidiScoreStreamView::update_bars()
 		size_t bar = p.bbt().bars - 1;
 		last_bar = bar;
 		double pos = _time_axis_view.editor().sample_to_pixel (p.sample (sr));
-		std::cerr << "Bar: " << p.bbt().bars << ", sample: " << p.sample (sr) << ", pos: " << pos << std::endl;
+		std::cerr << "Bar: " << p.bbt().bars << ", sample: " << p.sample (sr) << ", pos: " << pos << ", superclock: " << p.sclock() << std::endl;
 		if (bar > 0 && bar - 1 < _bars.size()) {
 			std::cerr << "Resizing to " << (pos - last_pos) << std::endl;
 			_bars[bar - 1]->set_width (pos - last_pos);

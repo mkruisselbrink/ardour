@@ -291,6 +291,7 @@ ARDOUR_UI::ARDOUR_UI (int *argcp, char **argvp[], const char* localedir)
 	, mixer (0)
 	, recorder (0)
 	, trigger_page (0)
+	, score_page (0)
 	, nsm (0)
 	, _was_dirty (false)
 	, _mixer_on_top (false)
@@ -358,6 +359,7 @@ ARDOUR_UI::ARDOUR_UI (int *argcp, char **argvp[], const char* localedir)
 	, prefs_visibility_button (S_("Window|Prefs"))
 	, recorder_visibility_button (S_("Window|Rec"))
 	, trigger_page_visibility_button (S_("Window|Cue"))
+	, score_page_visibility_button (S_("Window|Score"))
 	, nsm_first_session_opened (false)
 {
 	Gtkmm2ext::init (localedir);
@@ -874,6 +876,7 @@ ARDOUR_UI::~ARDOUR_UI ()
 		delete meterbridge; meterbridge = 0;
 		delete duplicate_routes_dialog; duplicate_routes_dialog = 0;
 		delete trigger_page; trigger_page = 0;
+		delete score_page; score_page = 0;
 		delete recorder; recorder = 0;
 		delete editor; editor = 0;
 		delete mixer; mixer = 0;
