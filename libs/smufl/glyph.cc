@@ -25,11 +25,9 @@
 
 #include <iostream>
 
-namespace SMuFL
-{
+namespace SMuFL {
 
-namespace
-{
+namespace {
 
 	const char *const g_glyph_names[] = {
 #include "smufl/data/glyph_names.h"
@@ -61,21 +59,21 @@ namespace
 const char *
 GlyphName (Glyph g)
 {
-	assert (g <= Glyph::kNumEntries);
+	assert (g <= Glyph::kNumEntries && g != Glyph::kNone);
 	return g_glyph_names[static_cast<size_t> (g)];
 }
 
 const char *
 GlyphDescription (Glyph g)
 {
-	assert (g <= Glyph::kNumEntries);
+	assert (g <= Glyph::kNumEntries && g != Glyph::kNone);
 	return g_glyph_descriptions[static_cast<size_t> (g)];
 }
 
 uint16_t
 GlyphCodePoint (Glyph g)
 {
-	assert (g <= Glyph::kNumEntries);
+	assert (g <= Glyph::kNumEntries && g != Glyph::kNone);
 	return g_code_points[static_cast<size_t> (g)];
 }
 
@@ -99,8 +97,9 @@ GlyphFromName (const std::string &name)
 {
 	static std::map<std::string, Glyph> glyph_map = GenerateGlyphMap();
 	auto it = glyph_map.find (name);
-	if (it == glyph_map.end())
+	if (it == glyph_map.end()) {
 		return {};
+	}
 	return it->second;
 }
 

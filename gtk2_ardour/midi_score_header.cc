@@ -18,9 +18,11 @@
 
 #include "midi_score_header.h"
 
-#include "smufl/clefs.h"
+#include "score/clef.h"
+
 #include "smufl/glyph.h"
-#include "smufl/key_signature.h"
+
+#include "score/key_signature.h"
 
 #include "midi_score_streamview.h"
 
@@ -85,11 +87,11 @@ MidiScoreHeader::on_expose_event (GdkEventExpose *ev)
 		cr->show_text (ts_top);
 	}
 
-	const SMuFL::Clef *clef = _view.clef();
+	const Score::Clef *clef = _view.clef();
 	if (clef) {
 		uint8_t lowest = clef->lowest_note_on_bar();
 
-		const SMuFL::KeySignature *ks = _view.key_signature();
+		const Score::KeySignature *ks = _view.key_signature();
 		if (ks) {
 			x -= 5;
 

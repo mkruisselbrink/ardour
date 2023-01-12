@@ -27,8 +27,7 @@
 
 #include "smufl/glyph.h"
 
-namespace SMuFL
-{
+namespace SMuFL {
 
 #define ENGRAVING_DEFAULTS_FLOAT_FIELD(name, default) float name = default;
 #define ENGRAVING_DEFAULT_SELF
@@ -50,8 +49,7 @@ struct GlyphInfo {
 	boost::optional<Offset> opticalCenter, repeatOffset;
 };
 
-class FontData
-{
+class FontData {
 public:
 	bool LoadFromJSON (const std::string &file_name);
 

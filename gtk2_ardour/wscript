@@ -575,6 +575,7 @@ def build(bld):
                 'libwidgets',
                 'libptformat',
                 'libsmufl',
+                'libscore',
                 ]
         obj.defines = [
                 'NOMAIN',
@@ -662,6 +663,7 @@ def build(bld):
                      'libwidgets',
                      'libptformat',
                      'libsmufl',
+                     'libscore',
                      ]
 
     obj.defines = [

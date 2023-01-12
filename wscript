@@ -326,6 +326,7 @@ children = [
         'libs/canvas',
         'libs/widgets',
         'libs/waveview',
+        'libs/score',
         'libs/plugins/reasonablesynth.lv2',
         'libs/plugins/a-comp.lv2',
         'libs/plugins/a-exp.lv2',

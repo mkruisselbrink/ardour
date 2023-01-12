@@ -16,16 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "smufl/key_signature.h"
+#include "score/key_signature.h"
 
 #include <cassert>
 #include <cstdlib>
 
-namespace SMuFL
-{
+namespace Score {
 
-namespace
-{
+namespace {
 	constexpr uint8_t kFirstSharp = 5; // F
 	constexpr uint8_t kSharpOffset = 7;
 	constexpr uint8_t kFirstFlat = 11; // B
@@ -38,14 +36,13 @@ namespace
 		return note == 0 || note == 2 || note == 4 || note == 5 || note == 7 || note == 9 || note == 11;
 	}
 
-	namespace N
-	{
+	namespace N {
 		using Ac = KeySignature::Accidental;
 		using NAA = KeySignature::NoteAndAccidentals;
 		constexpr NAA C{ 0, Ac::kNone };
 		constexpr NAA Cn{ 0, Ac::kNatural };
 		constexpr NAA Cs{ 0, Ac::kSharp };
-        constexpr NAA Db{ 2, Ac::kFlat };
+		constexpr NAA Db{ 2, Ac::kFlat };
 		constexpr NAA D{ 2, Ac::kNone };
 		constexpr NAA Dn{ 2, Ac::kNatural };
 		constexpr NAA Ds{ 2, Ac::kSharp };
@@ -55,7 +52,7 @@ namespace
 		constexpr NAA F{ 5, Ac::kNone };
 		constexpr NAA Fn{ 5, Ac::kNatural };
 		constexpr NAA Fs{ 5, Ac::kSharp };
-        constexpr NAA Gb{ 7, Ac::kFlat };
+		constexpr NAA Gb{ 7, Ac::kFlat };
 		constexpr NAA G{ 7, Ac::kNone };
 		constexpr NAA Gn{ 7, Ac::kNatural };
 		constexpr NAA Gs{ 7, Ac::kSharp };
@@ -91,9 +88,10 @@ namespace
 KeySignature::KeySignature (int flats_or_sharps, Scale scale) : _flats_or_sharps (flats_or_sharps), _scale (scale)
 {
 	assert (-7 <= flats_or_sharps && flats_or_sharps <= 7);
-	for (int i = 0; i != 12; ++i) {
-		_notes[i] = kScales[flats_or_sharps+7][i];
-	}
+	for (int i = 0; i != 12; ++i)
+		{
+			_notes[i] = kScales[flats_or_sharps + 7][i];
+		}
 }
 
 uint8_t
@@ -112,13 +110,16 @@ std::vector<uint8_t>
 KeySignature::sharps() const
 {
 	if (_flats_or_sharps <= 0)
-		return {};
+		{
+			return {};
+		}
 	std::vector<uint8_t> result;
 	uint8_t note = kFirstSharp;
-	for (int i = 0; i < _flats_or_sharps; ++i) {
-		result.push_back (note);
-		note = (note + kSharpOffset) % 12;
-	}
+	for (int i = 0; i < _flats_or_sharps; ++i)
+		{
+			result.push_back (note);
+			note = (note + kSharpOffset) % 12;
+		}
 	return result;
 }
 
@@ -126,13 +127,16 @@ std::vector<uint8_t>
 KeySignature::flats() const
 {
 	if (_flats_or_sharps >= 0)
-		return {};
+		{
+			return {};
+		}
 	std::vector<uint8_t> result;
 	uint8_t note = kFirstFlat;
-	for (int i = 0; i < -_flats_or_sharps; ++i) {
-		result.push_back (note);
-		note = (note + kFlatOffset) % 12;
-	}
+	for (int i = 0; i < -_flats_or_sharps; ++i)
+		{
+			result.push_back (note);
+			note = (note + kFlatOffset) % 12;
+		}
 	return result;
 }
 
@@ -140,21 +144,29 @@ KeySignature::NoteAndAccidentals
 KeySignature::note_and_accidentals_to_render (uint8_t note) const
 {
 	NoteAndAccidentals result = _notes[note % 12];
-    // Make sure we're int he right octave.
+	// Make sure we're int he right octave.
 	result.note += (note / 12) * 12;
-    // Wrapping around could get us off-by-one, so correct for that.
-    if (result.note > note+1) {
-        if (result.note > 12) {
-            result.note -= 12;
-        } else {
-            // TODO: maybe not used unsigned 8-bit ints for notes
-            // This must be note 0 trying to be rendered as note -1. Instead render as a C with a natural accidental.
-            result.note = 0;
-            result.accidental = Accidental::kNatural;
-        }
-    }
-    if (result.note < note-1) result.note += 12;
+	// Wrapping around could get us off-by-one, so correct for that.
+	if (result.note > note + 1)
+		{
+			if (result.note > 12)
+				{
+					result.note -= 12;
+				}
+			else
+				{
+					// TODO: maybe not used unsigned 8-bit ints for notes
+					// This must be note 0 trying to be rendered as note -1. Instead render as a C
+					// with a natural accidental.
+					result.note = 0;
+					result.accidental = Accidental::kNatural;
+				}
+		}
+	if (result.note < note - 1)
+		{
+			result.note += 12;
+		}
 	return result;
 }
 
-} // namespace SMuFL
+} // namespace Score

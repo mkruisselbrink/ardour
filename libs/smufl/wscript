@@ -25,10 +25,8 @@ VERSION = SMUFL_VERSION
 I18N_PACKAGE = 'libsmufl'
 
 smufl_sources = [
-    'clefs.cc',
     'font_data.cc',
     'glyph.cc',
-    'key_signature.cc',
 ]
 
 def options(opt):
@@ -60,45 +58,6 @@ def build(bld):
 
     bld.install_files(bld.env['DATADIR'], 'fonts/Leland/Leland.otf')
     bld.install_files(bld.env['DATADIR'], 'fonts/Leland/leland_metadata.json')
-
-    if bld.env['BUILD_TESTS'] and bld.is_defined('HAVE_CPPUNIT'):
-        # Static library (for unit test code coverage)
-        obj = bld(features = 'cxx cstlib')
-        obj.source         = smufl_sources
-        obj.export_includes = ['.']
-        obj.includes       = ['.']
-        obj.name           = 'libsmufl_static'
-        obj.target         = 'smufl_static'
-        obj.uselib         = [ 'BOOST', 'GLIBMM' ]
-        obj.use            = 'libpbd'
-        obj.vnum           = SMUFL_LIB_VERSION
-        obj.install_path   = ''
-        if bld.env['TEST_COVERAGE']:
-             obj.linkflags      = ['--coverage']
-             obj.cflags         = ['--coverage']
-             obj.cxxflags       = ['--coverage']
-        obj.defines        = ['PACKAGE="libsmufl"']
-
-        # Unit tests
-        obj              = bld(features = 'cxx cxxprogram')
-        obj.source       = [
-                'test/clefs_test.cc',
-                'test/key_signature_test.cc',
-                'test/testrunner.cc',
-                ]
-        obj.includes     = ['.']
-        obj.use          = 'libsmufl_static'
-        obj.uselib       = ['GLIBMM',  'CPPUNIT']
-        obj.target       = 'run-tests'
-        obj.name         = 'libsmufl-tests'
-        obj.install_path = ''
-        obj.defines      = ['PACKAGE="libsmufltest"']
-        if bld.env['TEST_COVERAGE']:
-            obj.linkflags      = ['--coverage']
-            obj.cflags         = ['--coverage']
-            obj.cxxflags       = ['--coverage']
-        if bld.is_defined('NEED_INTL'):
-            obj.linkflags = ' -lintl'
 
 def test(ctx):
     pass

@@ -24,8 +24,6 @@
 
 #include "canvas/container.h"
 
-#include "smufl/clefs.h"
-
 #include "widgets/tooltips.h"
 
 #include "midi_score_header.h"

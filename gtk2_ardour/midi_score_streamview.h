@@ -21,23 +21,20 @@
 
 #include "streamview.h"
 
-#include "smufl/key_signature.h"
+#include "score/key_signature.h"
 
-namespace ArdourCanvas
-{
+namespace ArdourCanvas {
 class LineSet;
 }
 
-namespace SMuFL
-{
+namespace Score {
 class Clef;
 }
 
 class MidiScoreTimeAxisView;
 class MidiScoreBar;
 
-class MidiScoreStreamView : public StreamView
-{
+class MidiScoreStreamView : public StreamView {
 public:
 	MidiScoreStreamView (MidiScoreTimeAxisView &);
 	~MidiScoreStreamView() override;
@@ -55,7 +52,7 @@ public:
 
 	void update_bars();
 
-	void update_region_contents(boost::shared_ptr<ARDOUR::Region> r);
+	void update_region_contents (boost::shared_ptr<ARDOUR::Region> r);
 
 	double
 	bottom_line() const
@@ -68,13 +65,13 @@ public:
 		return _line_distance;
 	}
 
-	const SMuFL::Clef *
+	const Score::Clef *
 	clef() const
 	{
 		return _clef;
 	}
 
-	const SMuFL::KeySignature *
+	const Score::KeySignature *
 	key_signature() const
 	{
 		return &_key_signature;
@@ -85,8 +82,8 @@ private:
 
 	ArdourCanvas::LineSet *_bar_lines = nullptr;
 
-	std::vector<std::unique_ptr<MidiScoreBar>> _bars;
-	std::map<Temporal::Beats, MidiScoreBar*> _bars_by_beats;
+	std::vector<std::unique_ptr<MidiScoreBar> > _bars;
+	std::map<Temporal::Beats, MidiScoreBar *> _bars_by_beats;
 
 	double _line_distance = 10;
 	double _bottom_line = 50;
@@ -96,8 +93,8 @@ private:
 	uint8_t _data_note_max = 0;
 	Temporal::timepos_t _data_last_time;
 
-	SMuFL::Clef *_clef = nullptr;
-	SMuFL::KeySignature _key_signature;
+	Score::Clef *_clef = nullptr;
+	Score::KeySignature _key_signature;
 };
 
 #endif /* __gtk_ardour_midi_score_streamview_h__ */

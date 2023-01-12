@@ -3,21 +3,21 @@ AccessModifierOffset: -8
 AllowShortFunctionsOnASingleLine: Empty
 BreakBeforeBraces: Custom
 BraceWrapping:
-  AfterCaseLabel:  true
-  AfterClass:      true
-  AfterControlStatement: Always
-  AfterEnum:       true
+  AfterCaseLabel:  false
+  AfterClass:      false
+  AfterControlStatement: Never
+  AfterEnum:       false
   AfterFunction:   true
   AfterNamespace:  false
   AfterObjCDeclaration: true
-  AfterStruct:     true
-  AfterUnion:      true
+  AfterStruct:     false
+  AfterUnion:      false
   AfterExternBlock: true
-  BeforeCatch:     true
-  BeforeElse:      true
+  BeforeCatch:     false
+  BeforeElse:      false
   BeforeLambdaBody: false
-  BeforeWhile:     true
-  IndentBraces:    true
+  BeforeWhile:     false
+  IndentBraces:    false
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true

@@ -154,6 +154,7 @@
 #include "lua_script_manager.h"
 #include "luawindow.h"
 #include "main_clock.h"
+#include "midi_score_page.h"
 #include "missing_plugin_dialog.h"
 #include "mixer_ui.h"
 #include "meterbridge.h"

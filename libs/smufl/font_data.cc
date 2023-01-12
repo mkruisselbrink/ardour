@@ -27,18 +27,17 @@ namespace pt = boost::property_tree;
 
 #define debug info
 
-namespace SMuFL
-{
+namespace SMuFL {
 
-namespace
-{
+namespace {
 
 	boost::optional<Offset>
 	ReadOptionalOffset (const pt::ptree &tree, const char *property_name)
 	{
 		boost::optional<const pt::ptree &> prop = tree.get_child_optional (property_name);
-		if (!prop || prop->size() != 2)
+		if (!prop || prop->size() != 2) {
 			return {};
+		}
 		try {
 			float x = prop->front().second.get_value<float>();
 			float y = prop->back().second.get_value<float>();
@@ -56,7 +55,6 @@ FontData::LoadFromJSON (const std::string &file_name)
 	PBD::info << "Loading JSON " << file_name << endmsg;
 
 	pt::ptree root;
-	// TODO catch parsing errors
 	try {
 		pt::read_json (file_name, root);
 	} catch (...) {
@@ -111,11 +109,11 @@ FontData::LoadFromJSON (const std::string &file_name)
 	try {
 		for (const auto &glyph_data : root.get_child ("glyphsWithAnchors")) {
 			std::string glyph_name = glyph_data.first;
-            boost::optional<Glyph> glyph = GlyphFromName(glyph_name);
-            if (!glyph) {
-                PBD::debug << "Unknown glyph name: " << glyph_name << endmsg;
-                continue;
-            }
+			boost::optional<Glyph> glyph = GlyphFromName (glyph_name);
+			if (!glyph) {
+				PBD::debug << "Unknown glyph name: " << glyph_name << endmsg;
+				continue;
+			}
 			GlyphInfo &info = _glyph_info[*glyph];
 			info.cutOutNE = ReadOptionalOffset (glyph_data.second, "cutOutNE");
 			info.cutOutNW = ReadOptionalOffset (glyph_data.second, "cutOutNW");
@@ -162,26 +160,36 @@ operator<< (std::ostream &os, const Offset &o)
 std::ostream &
 operator<< (std::ostream &os, const GlyphInfo &gi)
 {
-	if (gi.cutOutNE)
+	if (gi.cutOutNE) {
 		os << " cutOutNE = " << *gi.cutOutNE;
-	if (gi.cutOutNW)
+	}
+	if (gi.cutOutNW) {
 		os << " cutOutNW = " << *gi.cutOutNW;
-	if (gi.cutOutSE)
+	}
+	if (gi.cutOutSE) {
 		os << " cutOutSE = " << *gi.cutOutSE;
-	if (gi.cutOutSW)
+	}
+	if (gi.cutOutSW) {
 		os << " cutOutSW = " << *gi.cutOutSW;
-	if (gi.stemUpSE)
+	}
+	if (gi.stemUpSE) {
 		os << " stemUpSE = " << *gi.stemUpSE;
-	if (gi.stemUpNW)
+	}
+	if (gi.stemUpNW) {
 		os << " stemUpNW = " << *gi.stemUpNW;
-	if (gi.stemDownNW)
+	}
+	if (gi.stemDownNW) {
 		os << " stemDownNW = " << *gi.stemDownNW;
-	if (gi.stemDownSW)
+	}
+	if (gi.stemDownSW) {
 		os << " stemDownSW = " << *gi.stemDownSW;
-	if (gi.opticalCenter)
+	}
+	if (gi.opticalCenter) {
 		os << " opticalCenter = " << *gi.opticalCenter;
-	if (gi.repeatOffset)
+	}
+	if (gi.repeatOffset) {
 		os << " repeatOffset = " << *gi.repeatOffset;
+	}
 	return os;
 }
 

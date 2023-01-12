@@ -29,7 +29,8 @@ namespace SMuFL
 
 enum class Glyph {
 #include "smufl/data/glyph_ids.h"
-	kNumEntries
+	kNumEntries,
+    kNone = -1
 };
 
 constexpr Glyph time_signature_digits[] = {

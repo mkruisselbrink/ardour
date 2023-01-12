@@ -25,7 +25,7 @@
 #include "ardour/midi_region.h"
 #include "ardour/midi_source.h"
 
-#include "smufl/clefs.h"
+#include "score/clef.h"
 
 #include "gui_thread.h"
 #include "midi_score_bar.h"
@@ -87,13 +87,13 @@ MidiScoreStreamView::redisplay_track()
 	Temporal::BBT_Time bbt = tmap->bbt_at (_data_last_time);
 	std::cerr << "Last bar: " << bbt.bars << std::endl;
 
-	int bass_note_range = SMuFL::Clef::bass_clef.notes_on_bar (_data_note_min, _data_note_max);
-	int treble_note_range = SMuFL::Clef::treble_clef.notes_on_bar (_data_note_min, _data_note_max);
+	int bass_note_range = Score::Clef::bass_clef.notes_on_bar (_data_note_min, _data_note_max);
+	int treble_note_range = Score::Clef::treble_clef.notes_on_bar (_data_note_min, _data_note_max);
 	std::cerr << "Bass: " << bass_note_range << ", Treble: " << treble_note_range << std::endl;
 	if (bass_note_range > treble_note_range) {
-		_clef = &SMuFL::Clef::bass_clef;
+		_clef = &Score::Clef::bass_clef;
 	} else {
-		_clef = &SMuFL::Clef::treble_clef;
+		_clef = &Score::Clef::treble_clef;
 	}
 
 	update_bars();
@@ -106,8 +106,9 @@ void
 MidiScoreStreamView::update_region_contents (boost::shared_ptr<ARDOUR::Region> r)
 {
 	boost::shared_ptr<ARDOUR::MidiRegion> mr = boost::dynamic_pointer_cast<ARDOUR::MidiRegion> (r);
-	if (!mr)
+	if (!mr) {
 		return;
+	}
 
 	Temporal::Beats offset = r->position().beats();
 	ARDOUR::Source::ReaderLock lm (mr->midi_source()->mutex());
@@ -239,7 +240,8 @@ MidiScoreStreamView::update_bars()
 		size_t bar = p.bbt().bars - 1;
 		last_bar = bar;
 		double pos = _time_axis_view.editor().sample_to_pixel (p.sample (sr));
-		std::cerr << "Bar: " << p.bbt().bars << ", sample: " << p.sample (sr) << ", pos: " << pos << ", superclock: " << p.sclock() << std::endl;
+		std::cerr << "Bar: " << p.bbt().bars << ", sample: " << p.sample (sr) << ", pos: " << pos
+			  << ", superclock: " << p.sclock() << std::endl;
 		if (bar > 0 && bar - 1 < _bars.size()) {
 			std::cerr << "Resizing to " << (pos - last_pos) << std::endl;
 			_bars[bar - 1]->set_width (pos - last_pos);

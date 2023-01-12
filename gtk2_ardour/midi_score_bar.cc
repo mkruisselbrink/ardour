@@ -18,15 +18,16 @@
 
 #include "midi_score_bar.h"
 
-#include "smufl/clefs.h"
+#include "score/clef.h"
 #include "smufl/glyph.h"
-#include "smufl/key_signature.h"
+
+#include "score/key_signature.h"
 
 #include "midi_score_streamview.h"
 
 namespace
 {
-using Accidental = SMuFL::KeySignature::Accidental;
+using Accidental = Score::KeySignature::Accidental;
 using Beats = Temporal::Beats;
 
 struct PosAndAcc {
@@ -148,8 +149,8 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 		cr->show_text (s);
 	} else {
 		double x = self.x0 + 5;
-		const SMuFL::Clef *clef = _view.clef();
-		const SMuFL::KeySignature *ks = _view.key_signature();
+		const Score::Clef *clef = _view.clef();
+		const Score::KeySignature *ks = _view.key_signature();
 		double ld = _view.line_distance();
 
 		// simplest algorithm:

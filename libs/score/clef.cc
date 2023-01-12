@@ -16,12 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "smufl/clefs.h"
+#include "score/clef.h"
 
-#include <iostream>
-
-namespace SMuFL
-{
+namespace Score {
 
 uint8_t
 Clef::note_for_position (int note_pos) const
@@ -104,16 +101,18 @@ Clef::notes_on_bar (uint8_t note_min, uint8_t note_max) const
 	// note_min below bar:
 	int pos_min = position_for_note (note_min);
 	int pos_max = position_for_note (note_max);
-	if (pos_min > 8)
+	if (pos_min > 8) {
 		return 0;
-	if (pos_max < 0)
+	}
+	if (pos_max < 0) {
 		return 0;
+	}
 	return std::min (pos_max, 8) - std::max (pos_min, 0) + 1;
 }
 
-Clef Clef::treble_clef = Clef{ "Treble", Glyph::kGClef, 2, 67, 3, 1 };
-Clef Clef::bass_clef = Clef{ "Bass", Glyph::kFClef, 6, 53, 1, 0 };
+Clef Clef::treble_clef = Clef{ "Treble", SMuFL::Glyph::kGClef, 2, 67, 3, 1 };
+Clef Clef::bass_clef = Clef{ "Bass", SMuFL::Glyph::kFClef, 6, 53, 1, 0 };
 
 Clef *g_clefs[] = { &Clef::treble_clef, &Clef::bass_clef, nullptr };
 
-} // namespace SMuFL
+} // namespace Score
