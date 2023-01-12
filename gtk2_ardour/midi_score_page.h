@@ -19,8 +19,8 @@
 #ifndef __gtk_ardour_midi_score_page_h__
 #define __gtk_ardour_midi_score_page_h__
 
-#include <gtkmm/box.h>
 #include <gtkmm/adjustment.h>
+#include <gtkmm/box.h>
 
 #include "pbd/signals.h"
 
@@ -28,10 +28,10 @@
 
 #include "widgets/tabbable.h"
 
-namespace ArdourCanvas
-{
+namespace ArdourCanvas {
 class GtkCanvas;
 class GtkCanvasViewport;
+class ScrollGroup;
 } // namespace ArdourCanvas
 
 class MidiScorePage : public ArdourWidgets::Tabbable, public ARDOUR::SessionHandlePtr, public PBD::ScopedConnectionList
@@ -44,10 +44,13 @@ public:
 
 private:
 	Gtk::HBox _content;
-    Gtk::Adjustment _vertical_adjustment;
-    Gtk::Adjustment _horizontal_adjustment;
-    std::unique_ptr<ArdourCanvas::GtkCanvasViewport> _canvas_viewport;
-    ArdourCanvas::GtkCanvas *_canvas = nullptr;
+	Gtk::Adjustment _vertical_adjustment;
+	Gtk::Adjustment _horizontal_adjustment;
+	std::unique_ptr<ArdourCanvas::GtkCanvasViewport> _canvas_viewport;
+	ArdourCanvas::GtkCanvas *_canvas = nullptr;
+
+	std::unique_ptr<ArdourCanvas::ScrollGroup> _hv_scroll_group;
+	std::unique_ptr<ArdourCanvas::ScrollGroup> _v_scroll_group;
 };
 
 #endif // __gtk_ardour_midi_score_page_h__

@@ -23,6 +23,9 @@
 #include "pbd/i18n.h"
 
 #include "canvas/canvas.h"
+#include "canvas/debug.h"
+#include "canvas/rectangle.h"
+#include "canvas/scroll_group.h"
 
 #include "gtkmm2ext/colors.h"
 
@@ -32,12 +35,44 @@ MidiScorePage::MidiScorePage()
 {
 	_canvas_viewport
 	    = std::make_unique<ArdourCanvas::GtkCanvasViewport> (_horizontal_adjustment, _vertical_adjustment);
-    _canvas = _canvas_viewport->canvas();
+	_canvas = _canvas_viewport->canvas();
 
-    _canvas->set_background_color(Gtkmm2ext::rgba_to_color(0.9, 0.9, 0.9, 1.0));
-    _canvas->use_nsglview();
+	_canvas->set_background_color (Gtkmm2ext::rgba_to_color (0.9, 0.9, 0.7, 1.0));
+	_canvas->use_nsglview();
+
+	_canvas->set_name ("ScoreMainCanvas");
+	_canvas->add_events (Gdk::POINTER_MOTION_HINT_MASK | Gdk::SCROLL_MASK | Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
 
 	_content.pack_start (*_canvas_viewport, /*expand=*/true, /*fill=*/true, /*padding=*/0);
+
+	_hv_scroll_group = std::make_unique<ArdourCanvas::ScrollGroup> (
+	    _canvas->root(),
+	    static_cast<ArdourCanvas::ScrollGroup::ScrollSensitivity> (
+		ArdourCanvas::ScrollGroup::ScrollsHorizontally | ArdourCanvas::ScrollGroup::ScrollsVertically));
+	CANVAS_DEBUG_NAME (_hv_scroll_group.get(), "canvas hv scroll");
+	_canvas->add_scroller (*_hv_scroll_group);
+
+	_v_scroll_group = std::make_unique<ArdourCanvas::ScrollGroup> (_canvas->root(),
+	                                                               ArdourCanvas::ScrollGroup::ScrollsVertically);
+	CANVAS_DEBUG_NAME (_v_scroll_group.get(), "canvas v scroll");
+	_canvas->add_scroller (*_v_scroll_group);
+
+	auto *r = new ArdourCanvas::Rectangle (_v_scroll_group.get(),
+	                                       ArdourCanvas::Rect (0.0, 0.0, 10.0, ArdourCanvas::COORD_MAX));
+	CANVAS_DEBUG_NAME (r, "rect");
+	r->set_fill (true);
+	r->set_outline (true);
+	r->set_outline_color (Gtkmm2ext::rgba_to_color (0, 0, 0, 1.0));
+	r->set_fill_color (Gtkmm2ext::rgba_to_color (1.0, 0.0, 0.0, 1.0));
+	r->show();
+
+	r = new ArdourCanvas::Rectangle (_hv_scroll_group.get(), ArdourCanvas::Rect (50.0, 50.0, 250.0, 250.0));
+	CANVAS_DEBUG_NAME (r, "rect2");
+	r->set_fill (true);
+	r->set_outline (true);
+	r->set_outline_color (Gtkmm2ext::rgba_to_color (0, 0, 0, 1.0));
+	r->set_fill_color (Gtkmm2ext::rgba_to_color (0.0, 0.0, 1.0, 1.0));
+	r->show();
 }
 
 MidiScorePage::~MidiScorePage() {}

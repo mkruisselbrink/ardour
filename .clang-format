@@ -1,9 +1,29 @@
 BasedOnStyle: GNU
 AccessModifierOffset: -8
 AllowShortFunctionsOnASingleLine: Empty
-BreakBeforeBraces: Linux
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel:  true
+  AfterClass:      true
+  AfterControlStatement: Always
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  false
+  AfterObjCDeclaration: true
+  AfterStruct:     true
+  AfterUnion:      true
+  AfterExternBlock: true
+  BeforeCatch:     true
+  BeforeElse:      true
+  BeforeLambdaBody: false
+  BeforeWhile:     true
+  IndentBraces:    true
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
 ColumnLimit: 119
 IndentWidth: 8
 NamespaceIndentation: Inner
 SpaceBeforeParens: NonEmptyParentheses
 UseTab: AlignWithSpaces
+InsertBraces: true
