@@ -35,13 +35,16 @@ class LineSet;
 class ScrollGroup;
 } // namespace ArdourCanvas
 
-class MidiScorePage : public ArdourWidgets::Tabbable, public ARDOUR::SessionHandlePtr, public PBD::ScopedConnectionList
-{
+class MidiScorePage : public ArdourWidgets::Tabbable,
+		      public ARDOUR::SessionHandlePtr,
+		      public PBD::ScopedConnectionList {
 public:
 	MidiScorePage();
 	~MidiScorePage() override;
 
 	void set_session (ARDOUR::Session *) override;
+
+	bool canvas_scroll_event (GdkEventScroll *event, bool from_canvas);
 
 private:
 	Gtk::HBox _content;
@@ -53,7 +56,7 @@ private:
 	std::unique_ptr<ArdourCanvas::ScrollGroup> _hv_scroll_group;
 	std::unique_ptr<ArdourCanvas::ScrollGroup> _v_scroll_group;
 
-    ArdourCanvas::LineSet *_staff_lines = nullptr;
+	ArdourCanvas::LineSet *_staff_lines = nullptr;
 };
 
 #endif // __gtk_ardour_midi_score_page_h__

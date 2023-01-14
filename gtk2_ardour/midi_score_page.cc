@@ -129,6 +129,9 @@ MidiScorePage::MidiScorePage()
 	_canvas->add_events (Gdk::POINTER_MOTION_HINT_MASK | Gdk::SCROLL_MASK | Gdk::KEY_PRESS_MASK
 	                     | Gdk::KEY_RELEASE_MASK);
 
+	_canvas->signal_scroll_event().connect (
+	    sigc::bind (sigc::mem_fun (*this, &MidiScorePage::canvas_scroll_event), true));
+
 	_content.pack_start (*_canvas_viewport, /*expand=*/true, /*fill=*/true, /*padding=*/0);
 
 	_hv_scroll_group = std::make_unique<ArdourCanvas::ScrollGroup> (
@@ -149,18 +152,18 @@ MidiScorePage::MidiScorePage()
 	r->set_fill (true);
 	r->set_outline (true);
 	r->set_outline_color (Gtkmm2ext::rgba_to_color (0, 0, 0, 1.0));
-	r->set_fill_color (Gtkmm2ext::rgba_to_color (1.0, 0.0, 0.0, 1.0));
+	r->set_fill_color (Gtkmm2ext::rgba_to_color (1.0, 0.0, 0.0, 0.2));
 	r->show();
 
-	r = new ArdourCanvas::Rectangle (_hv_scroll_group.get(), ArdourCanvas::Rect (50.0, 50.0, 250.0, 250.0));
+	r = new ArdourCanvas::Rectangle (_hv_scroll_group.get(), ArdourCanvas::Rect (100.0, 0.0, 250.0, 250.0));
 	CANVAS_DEBUG_NAME (r, "rect2");
 	r->set_fill (true);
 	r->set_outline (true);
 	r->set_outline_color (Gtkmm2ext::rgba_to_color (0, 0, 0, 1.0));
-	r->set_fill_color (Gtkmm2ext::rgba_to_color (0.0, 0.0, 1.0, 1.0));
+	r->set_fill_color (Gtkmm2ext::rgba_to_color (0.0, 0.0, 1.0, 0.2));
 	r->show();
 
-	_staff_lines = new ArdourCanvas::LineSet (_hv_scroll_group.get(), ArdourCanvas::LineSet::Horizontal);
+	_staff_lines = new ArdourCanvas::LineSet (_v_scroll_group.get(), ArdourCanvas::LineSet::Horizontal);
 	_staff_lines->set_extent (ArdourCanvas::COORD_MAX);
 }
 
@@ -195,17 +198,37 @@ MidiScorePage::set_session (ARDOUR::Session *s)
 		auto *clef = new ScoreCanvas::Clef (_v_scroll_group.get(), Score::Clef::treble_clef);
 		clef->set_position ({ 20, y - 8 });
 		clef = new ScoreCanvas::Clef (_v_scroll_group.get(), Score::Clef::bass_clef);
-		clef->set_position ({ 50, y - 24});
+		clef->set_position ({ 50, y - 24 });
 
 		auto *g = new ScoreCanvas::Glyph (_v_scroll_group.get(), SMuFL::Glyph::kCClef);
 		g->set_position ({ 80, y - 16 });
 
 		_staff_lines->add_coord (y, 1.0, 0x000000ff);
-		_staff_lines->add_coord (y-8, 1.0, 0x000000ff);
-		_staff_lines->add_coord (y-16, 1.0, 0x000000ff);
-		_staff_lines->add_coord (y-24, 1.0, 0x000000ff);
-		_staff_lines->add_coord (y-32, 1.0, 0x000000ff);
+		_staff_lines->add_coord (y - 8, 1.0, 0x000000ff);
+		_staff_lines->add_coord (y - 16, 1.0, 0x000000ff);
+		_staff_lines->add_coord (y - 24, 1.0, 0x000000ff);
+		_staff_lines->add_coord (y - 32, 1.0, 0x000000ff);
 
 		y += 100;
 	}
+}
+
+bool
+MidiScorePage::canvas_scroll_event (GdkEventScroll *ev, bool from_canvas)
+{
+	switch (ev->direction) {
+	case GDK_SCROLL_UP:
+		_vertical_adjustment.set_value (_vertical_adjustment.get_value() - 32);
+		return true;
+	case GDK_SCROLL_DOWN:
+		_vertical_adjustment.set_value (_vertical_adjustment.get_value() + 32);
+		return true;
+	case GDK_SCROLL_LEFT:
+		_horizontal_adjustment.set_value (_horizontal_adjustment.get_value() - 32);
+		return true;
+	case GDK_SCROLL_RIGHT:
+		_horizontal_adjustment.set_value (_horizontal_adjustment.get_value() + 32);
+		return true;
+	}
+	return false;
 }
