@@ -60,5 +60,6 @@
     <Option name="larger bold monospace font" value="bold @MONOSPACE@ @FONT_LARGER@"/>
     <Option name="huger bold monospace font" value="bold @MONOSPACE@ @FONT_HUGER@"/>
     <Option name="massive bold monospace font" value="bold @MONOSPACE@ @FONT_MASSIVE@"/>
+    <Option name="score font" value="Leland @FONT_HUGER@"/>
   </Canvas>
 </Ardour>

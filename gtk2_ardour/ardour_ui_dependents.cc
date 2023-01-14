@@ -137,6 +137,7 @@ ARDOUR_UI::connect_dependents_to_session (ARDOUR::Session *s)
 	recorder->set_session (s);
 	trigger_page->set_session (s);
 	meterbridge->set_session (s);
+	score_page->set_session (s);
 
 	/* its safe to do this now */
 

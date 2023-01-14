@@ -62,4 +62,4 @@ CANVAS_FONT_VARIABLE(LargeBoldMonospaceFont, "large bold monospace font")
 CANVAS_FONT_VARIABLE(LargerBoldMonospaceFont, "larger bold monospace font")
 CANVAS_FONT_VARIABLE(HugerBoldMonospaceFont, "huger bold monospace font")
 CANVAS_FONT_VARIABLE(MassiveBoldMonospaceFont, "massive bold monospace font")
-
+CANVAS_FONT_VARIABLE(ScoreFont, "score font")

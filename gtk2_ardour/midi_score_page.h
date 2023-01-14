@@ -31,6 +31,7 @@
 namespace ArdourCanvas {
 class GtkCanvas;
 class GtkCanvasViewport;
+class LineSet;
 class ScrollGroup;
 } // namespace ArdourCanvas
 
@@ -51,6 +52,8 @@ private:
 
 	std::unique_ptr<ArdourCanvas::ScrollGroup> _hv_scroll_group;
 	std::unique_ptr<ArdourCanvas::ScrollGroup> _v_scroll_group;
+
+    ArdourCanvas::LineSet *_staff_lines = nullptr;
 };
 
 #endif // __gtk_ardour_midi_score_page_h__

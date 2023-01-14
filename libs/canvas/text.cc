@@ -46,6 +46,8 @@ Text::Text (Canvas* c)
         , _width_correction (-1)
 	, _clamped_width (COORD_MAX)
 	, _height_based_on_allocation (false)
+	, _adjust_for_baseline (false)
+	, _baseline (0)
 {
 	_outline = false;
 }
@@ -61,6 +63,8 @@ Text::Text (Item* parent)
         , _width_correction (-1)
 	, _clamped_width (COORD_MAX)
 	, _height_based_on_allocation (false)
+	, _adjust_for_baseline (false)
+	, _baseline (0)
 {
 	_outline = false;
 }
@@ -78,6 +82,16 @@ Text::set_height_based_on_allocation (bool yn)
 	 */
 
 	_height_based_on_allocation = yn;
+}
+
+void
+Text::set_adjust_for_baseline (bool adjust)
+{
+	/* assumed to be set during construction, so we do not schedule a
+	 * redraw after changing this.
+	 */
+
+	_adjust_for_baseline = adjust;
 }
 
 void
@@ -168,6 +182,8 @@ Text::_redraw () const
 	_width = w + _width_correction;
 	_height = h;
 
+	_baseline = static_cast<double>(layout->get_baseline ()) / Pango::SCALE;
+
 #ifdef __APPLE__
 	_image = Cairo::ImageSurface::create (Cairo::FORMAT_ARGB32, _width * 2, _height * 2);
 #else
@@ -210,7 +226,7 @@ Text::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) const
 		return;
 	}
 
-	const Rect r (0, 0, min (_clamped_width, (double)_image->get_width ()), _image->get_height ());
+	const Rect r (0, _adjust_for_baseline ? -_baseline : 0, min (_clamped_width, (double)_image->get_width ()), _image->get_height ());
 	Rect self = item_to_window (r);
 	Rect intersection = self.intersection (area);
 
@@ -267,7 +283,8 @@ Text::compute_bounding_box () const
 		if (_need_redraw || !_image) {
 			_redraw ();
 		}
-		_bounding_box = Rect (0, 0, min (_clamped_width, (double) _image->get_width() * retina_factor), _image->get_height() * retina_factor);
+		_bounding_box = Rect (0, _adjust_for_baseline ? -_baseline : 0, min (_clamped_width, (double) _image->get_width() * retina_factor), _image->get_height() * retina_factor);
+		std::cerr << "Bounding box: " << _bounding_box << std::endl;
 		set_bbox_clean ();
 	}
 }

@@ -20,14 +20,98 @@
 
 #include <gtkmm/action.h>
 
+#include <cairomm/fontface.h>
+
 #include "pbd/i18n.h"
+
+#include "ardour/midi_track.h"
+#include "ardour/session.h"
+#include "ardour/types.h"
 
 #include "canvas/canvas.h"
 #include "canvas/debug.h"
+#include "canvas/line_set.h"
 #include "canvas/rectangle.h"
 #include "canvas/scroll_group.h"
+#include "canvas/text.h"
 
 #include "gtkmm2ext/colors.h"
+
+#include "score/clef.h"
+
+#include "smufl/glyph.h"
+
+#include "ui_config.h"
+
+namespace ScoreCanvas {
+
+class ScoreRendering {
+public:
+	static ScoreRendering &
+	instance()
+	{
+		static ScoreRendering *r = new ScoreRendering();
+		return *r;
+	}
+
+private:
+	ScoreRendering() {}
+};
+
+class Glyph : public ArdourCanvas::Item {
+public:
+	Glyph (ArdourCanvas::Item *parent, SMuFL::Glyph g) : ArdourCanvas::Item (parent)
+	{
+		// TODO: no need to create a new Font instance for every glyph
+		Pango::FontDescription font_desc = UIConfiguration::instance().get_ScoreFont();
+		_font_face = Cairo::ToyFontFace::create (font_desc.get_family(), Cairo::FONT_SLANT_NORMAL,
+		                                         Cairo::FONT_WEIGHT_NORMAL);
+		_font
+		    = Cairo::ScaledFont::create (_font_face, Cairo::scaling_matrix (32, 32), Cairo::identity_matrix());
+		_text = SMuFL::GlyphAsUTF8 (g);
+	}
+
+	void
+	render (ArdourCanvas::Rect const &area, Cairo::RefPtr<Cairo::Context> cr) const override
+	{
+		ArdourCanvas::Duple pos = item_to_window (ArdourCanvas::Duple (0, 0));
+		cr->set_source_rgb (0, 0, 0);
+		cr->set_scaled_font (_font);
+
+		cr->move_to (pos.x, pos.y);
+		cr->show_text (_text);
+	}
+
+	void
+	compute_bounding_box() const override
+	{
+		Cairo::TextExtents extents;
+		cairo_scaled_font_text_extents (const_cast<Cairo::ScaledFont::cobject *> (_font->cobj()),
+		                                _text.c_str(), &extents);
+		_bounding_box = { extents.x_bearing, extents.y_bearing, extents.x_bearing + extents.width,
+			          extents.y_bearing + extents.height };
+		set_bbox_clean();
+	}
+
+private:
+	std::string _text;
+	Cairo::RefPtr<Cairo::FontFace> _font_face;
+	Cairo::RefPtr<Cairo::ScaledFont> _font;
+};
+
+class Clef : public Glyph {
+public:
+	Clef (ArdourCanvas::Item *parent, const Score::Clef &clef) : Glyph (parent, clef.glyph)
+	{
+		/*		set_font_description (UIConfiguration::instance().get_ScoreFont());
+		                std::cerr << "Font size: " << UIConfiguration::instance().get_ScoreFont().get_size() <<
+		   std::endl; set_adjust_for_baseline (true); set (SMuFL::GlyphAsUTF8 (clef.glyph));*/
+	}
+
+private:
+};
+
+} // namespace ScoreCanvas
 
 MidiScorePage::MidiScorePage()
     : Tabbable (_content, _ ("Score"), X_ ("score")), _vertical_adjustment (0.0, 0.0, 1e16),
@@ -37,11 +121,13 @@ MidiScorePage::MidiScorePage()
 	    = std::make_unique<ArdourCanvas::GtkCanvasViewport> (_horizontal_adjustment, _vertical_adjustment);
 	_canvas = _canvas_viewport->canvas();
 
-	_canvas->set_background_color (Gtkmm2ext::rgba_to_color (0.9, 0.9, 0.7, 1.0));
+	_canvas->set_background_color (Gtkmm2ext::rgba_to_color (0.9, 0.9, 0.85, 1.0));
 	_canvas->use_nsglview();
 
 	_canvas->set_name ("ScoreMainCanvas");
-	_canvas->add_events (Gdk::POINTER_MOTION_HINT_MASK | Gdk::SCROLL_MASK | Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
+	_canvas->set_debug_render (true);
+	_canvas->add_events (Gdk::POINTER_MOTION_HINT_MASK | Gdk::SCROLL_MASK | Gdk::KEY_PRESS_MASK
+	                     | Gdk::KEY_RELEASE_MASK);
 
 	_content.pack_start (*_canvas_viewport, /*expand=*/true, /*fill=*/true, /*padding=*/0);
 
@@ -58,7 +144,7 @@ MidiScorePage::MidiScorePage()
 	_canvas->add_scroller (*_v_scroll_group);
 
 	auto *r = new ArdourCanvas::Rectangle (_v_scroll_group.get(),
-	                                       ArdourCanvas::Rect (0.0, 0.0, 10.0, ArdourCanvas::COORD_MAX));
+	                                       ArdourCanvas::Rect (0.0, 0.0, 100.0, ArdourCanvas::COORD_MAX));
 	CANVAS_DEBUG_NAME (r, "rect");
 	r->set_fill (true);
 	r->set_outline (true);
@@ -73,6 +159,9 @@ MidiScorePage::MidiScorePage()
 	r->set_outline_color (Gtkmm2ext::rgba_to_color (0, 0, 0, 1.0));
 	r->set_fill_color (Gtkmm2ext::rgba_to_color (0.0, 0.0, 1.0, 1.0));
 	r->show();
+
+	_staff_lines = new ArdourCanvas::LineSet (_hv_scroll_group.get(), ArdourCanvas::LineSet::Horizontal);
+	_staff_lines->set_extent (ArdourCanvas::COORD_MAX);
 }
 
 MidiScorePage::~MidiScorePage() {}
@@ -80,5 +169,43 @@ MidiScorePage::~MidiScorePage() {}
 void
 MidiScorePage::set_session (ARDOUR::Session *s)
 {
+	std::cerr << "Setting session" << std::endl;
 	SessionHandlePtr::set_session (s);
+
+	if (!s) {
+		return;
+	}
+
+	double y = 90;
+
+	boost::shared_ptr<ARDOUR::RouteList> tracks = s->get_tracks();
+	for (const auto &t : *tracks) {
+		auto midi_track = boost::dynamic_pointer_cast<ARDOUR::MidiTrack> (t);
+		if (!midi_track) {
+			std::cerr << "Not a midi track: " << t->name() << std::endl;
+			continue;
+		}
+
+		std::cerr << "Name: " << midi_track->name() << std::endl;
+		auto *txt = new ArdourCanvas::Text (_v_scroll_group.get());
+		txt->set (midi_track->name());
+		txt->set_position ({ 0, y });
+		txt->show();
+
+		auto *clef = new ScoreCanvas::Clef (_v_scroll_group.get(), Score::Clef::treble_clef);
+		clef->set_position ({ 20, y - 8 });
+		clef = new ScoreCanvas::Clef (_v_scroll_group.get(), Score::Clef::bass_clef);
+		clef->set_position ({ 50, y - 24});
+
+		auto *g = new ScoreCanvas::Glyph (_v_scroll_group.get(), SMuFL::Glyph::kCClef);
+		g->set_position ({ 80, y - 16 });
+
+		_staff_lines->add_coord (y, 1.0, 0x000000ff);
+		_staff_lines->add_coord (y-8, 1.0, 0x000000ff);
+		_staff_lines->add_coord (y-16, 1.0, 0x000000ff);
+		_staff_lines->add_coord (y-24, 1.0, 0x000000ff);
+		_staff_lines->add_coord (y-32, 1.0, 0x000000ff);
+
+		y += 100;
+	}
 }

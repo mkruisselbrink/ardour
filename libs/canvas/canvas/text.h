@@ -63,6 +63,8 @@ public:
 
 	void set_height_based_on_allocation (bool yn);
 
+	void set_adjust_for_baseline (bool adjust);
+
 	static int font_size_for_height (Distance height, std::string const & font_family, Glib::RefPtr<Pango::Context> const &);
 	static void drop_height_maps ();
 
@@ -79,6 +81,8 @@ private:
 	mutable double          _width_correction;
 	double                  _clamped_width;
 	bool                    _height_based_on_allocation;
+	bool					_adjust_for_baseline;
+	mutable double	        _baseline;
 
 	void _redraw () const;
 
