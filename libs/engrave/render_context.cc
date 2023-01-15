@@ -18,6 +18,13 @@
 
 #include "engrave/render_context.h"
 
+#include <glib.h>
+
+#include "pbd/error.h"
+#include "pbd/file_utils.h"
+
+#include "ardour/filesystem_paths.h"
+
 namespace Engrave {
 
 RenderContext::RenderContext (const std::string &family, double line_distance) : _line_distance (line_distance)
@@ -32,7 +39,19 @@ RenderContext::set_font_family (const std::string &family)
 	_font = Cairo::ScaledFont::create (_font_face, Cairo::scaling_matrix (_line_distance * 4, _line_distance * 4),
 	                                   Cairo::identity_matrix());
 
-	// TODO: Load font data
+	std::string metadata_path;
+	std::string metadata_file_name = family + "_metadata.json";
+	for (size_t i = 0; i < metadata_file_name.size(); ++i) {
+		metadata_file_name[i] = g_ascii_tolower (metadata_file_name[i]);
+	}
+	if (PBD::find_file (ARDOUR::ardour_data_search_path(), metadata_file_name, metadata_path)) {
+		PBD::debug << "Found " << metadata_path << endmsg;
+		if (!_font_data.LoadFromJSON (metadata_path)) {
+			PBD::error << "Failed to load font metadata from " << metadata_file_name << endmsg;
+		}
+	} else {
+		PBD::error << "Failed to find font metadata " << metadata_file_name << endmsg;
+	}
 }
 
 void
@@ -45,9 +64,11 @@ RenderContext::set_line_distance (double d)
 	                                   Cairo::identity_matrix());
 }
 
-void RenderContext::text_extents(const std::string& text, Cairo::TextExtents& extents) const {
-		cairo_scaled_font_text_extents (const_cast<Cairo::ScaledFont::cobject *> (_font->cobj()),
-		                                text.c_str(), &extents);
+void
+RenderContext::text_extents (const std::string &text, Cairo::TextExtents &extents) const
+{
+	cairo_scaled_font_text_extents (const_cast<Cairo::ScaledFont::cobject *> (_font->cobj()), text.c_str(),
+	                                &extents);
 }
 
 } // namespace Engrave

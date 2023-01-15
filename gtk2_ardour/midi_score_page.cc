@@ -35,74 +35,12 @@
 #include "canvas/scroll_group.h"
 #include "canvas/text.h"
 #include "engrave/clef.h"
+#include "engrave/clef_item.h"
 #include "engrave/glyph.h"
+#include "engrave/glyph_item.h"
 #include "gtkmm2ext/colors.h"
 
 #include "ui_config.h"
-
-namespace ScoreCanvas {
-
-class ScoreRendering {
-public:
-	static ScoreRendering &
-	instance()
-	{
-		static ScoreRendering *r = new ScoreRendering();
-		return *r;
-	}
-
-private:
-	ScoreRendering() {}
-};
-
-class Glyph : public ArdourCanvas::Item {
-public:
-	Glyph (const Engrave::RenderContext &context, ArdourCanvas::Item *parent, Engrave::Glyph g)
-	    : ArdourCanvas::Item (parent), _context (context)
-	{
-		_text = Engrave::GlyphAsUTF8 (g);
-	}
-
-	void
-	render (ArdourCanvas::Rect const &area, Cairo::RefPtr<Cairo::Context> cr) const override
-	{
-		ArdourCanvas::Duple pos = item_to_window (ArdourCanvas::Duple (0, 0));
-		cr->set_source_rgb (0, 0, 0);
-		cr->set_scaled_font (_context.font());
-
-		cr->move_to (pos.x, pos.y);
-		cr->show_text (_text);
-	}
-
-	void
-	compute_bounding_box() const override
-	{
-		Cairo::TextExtents extents;
-		_context.text_extents (_text, extents);
-		_bounding_box = { extents.x_bearing, extents.y_bearing, extents.x_bearing + extents.width,
-			          extents.y_bearing + extents.height };
-		set_bbox_clean();
-	}
-
-private:
-	const Engrave::RenderContext &_context;
-	std::string _text;
-};
-
-class Clef : public Glyph {
-public:
-	Clef (const Engrave::RenderContext &context, ArdourCanvas::Item *parent, const Engrave::Clef &clef)
-	    : Glyph (context, parent, clef.glyph)
-	{
-		/*		set_font_description (UIConfiguration::instance().get_ScoreFont());
-		                std::cerr << "Font size: " << UIConfiguration::instance().get_ScoreFont().get_size() <<
-		   std::endl; set_adjust_for_baseline (true); set (Engrave::GlyphAsUTF8 (clef.glyph));*/
-	}
-
-private:
-};
-
-} // namespace ScoreCanvas
 
 MidiScorePage::MidiScorePage()
     : Tabbable (_content, _ ("Score"), X_ ("score")), _vertical_adjustment (0.0, 0.0, 1e16),
@@ -190,12 +128,12 @@ MidiScorePage::set_session (ARDOUR::Session *s)
 		txt->show();
 
 		auto *clef
-		    = new ScoreCanvas::Clef (_render_context, _v_scroll_group.get(), Engrave::Clef::treble_clef);
-		clef->set_position ({ 20, y - _render_context.line_distance() });
-		clef = new ScoreCanvas::Clef (_render_context, _v_scroll_group.get(), Engrave::Clef::bass_clef);
-		clef->set_position ({ 50, y - _render_context.line_distance() * 3 });
+		    = new Engrave::ClefItem (_render_context, _v_scroll_group.get(), Engrave::Clef::treble_clef);
+		clef->set_position ({ 20, y });
+		clef = new Engrave::ClefItem (_render_context, _v_scroll_group.get(), Engrave::Clef::bass_clef);
+		clef->set_position ({ 50, y });
 
-		auto *g = new ScoreCanvas::Glyph (_render_context, _v_scroll_group.get(), Engrave::Glyph::kCClef);
+		auto *g = new Engrave::GlyphItem (_render_context, _v_scroll_group.get(), Engrave::Glyph::kCClef);
 		g->set_position ({ 80, y - _render_context.line_distance() * 2 });
 
 		_staff_lines->add_coord (y, _render_context.staff_line_thickness(), 0x000000ff);

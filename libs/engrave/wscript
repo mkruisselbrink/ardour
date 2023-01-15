@@ -26,13 +26,17 @@ I18N_PACKAGE = 'libengrave'
 
 engrave_sources = [
     'clef.cc',
+    'clef_item.cc',
     'font_data.cc',
     'glyph.cc',
+    'glyph_item.cc',
     'key_signature.cc',
     'render_context.cc',
 ]
 
 engrave_use = [
+    'libardour',
+    'libcanvas',
     'libpbd',
 ]
 
@@ -40,6 +44,7 @@ engrave_uselibs = [
     'BOOST',
     'CAIROMM',
     'GLIBMM',
+    'GTKMM',
 ]
 
 path_prefix = 'libs/engrave'
