@@ -36,6 +36,10 @@ class LineSet;
 class ScrollGroup;
 } // namespace ArdourCanvas
 
+namespace Engrave {
+class StaffLineSet;
+} // namespace Engrave
+
 class MidiScorePage : public ArdourWidgets::Tabbable,
 		      public ARDOUR::SessionHandlePtr,
 		      public PBD::ScopedConnectionList {
@@ -57,9 +61,10 @@ private:
 	std::unique_ptr<ArdourCanvas::ScrollGroup> _hv_scroll_group;
 	std::unique_ptr<ArdourCanvas::ScrollGroup> _v_scroll_group;
 
-	ArdourCanvas::LineSet *_staff_lines = nullptr;
-
     Engrave::RenderContext _render_context;
+
+	std::unique_ptr<Engrave::StaffLineSet> _staff_lines;
+
 };
 
 #endif // __gtk_ardour_midi_score_page_h__

@@ -16,38 +16,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef ENGRAVE_GLYPH_ITEM_H_
-#define ENGRAVE_GLYPH_ITEM_H_
+#ifndef ENGRAVE_STAFF_LINE_SET_H
+#define ENGRAVE_STAFF_LINE_SET_H
 
-#include "engrave/glyph.h"
-
-#include "canvas/item.h"
+#include "canvas/line_set.h"
 
 namespace Engrave {
 
 class RenderContext;
 
-class GlyphItem : public ArdourCanvas::Item {
+class StaffLineSet : public ArdourCanvas::LineSet {
 public:
-	GlyphItem (const RenderContext &context, ArdourCanvas::Item *parent, Glyph glyph);
+	StaffLineSet (const RenderContext &context, ArdourCanvas::Item *parent);
 
-	// ArdourCanvas::Item
-	void render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Context> cr) const override;
-	void compute_bounding_box() const override;
-
-	// Should only be called during construction. Offset is in number of staff lines.
-	void
-	set_line_offset (double offset)
-	{
-		_line_offset = offset;
-	}
+	void add_staff (ArdourCanvas::Coord bottom_line_pos, int line_count = 5);
 
 private:
 	const RenderContext &_context;
-	std::string _text;
-	double _line_offset = 0;
 };
 
 } // namespace Engrave
 
-#endif // ENGRAVE_GLYPH_ITEM_H_
+#endif // ENGRAVE_STAFF_LINE_SET_H

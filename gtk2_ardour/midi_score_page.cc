@@ -38,6 +38,7 @@
 #include "engrave/clef_item.h"
 #include "engrave/glyph.h"
 #include "engrave/glyph_item.h"
+#include "engrave/staff_line_set.h"
 #include "gtkmm2ext/colors.h"
 
 #include "ui_config.h"
@@ -94,9 +95,8 @@ MidiScorePage::MidiScorePage()
 	r->set_fill_color (Gtkmm2ext::rgba_to_color (0.0, 0.0, 1.0, 0.1));
 	r->show();
 
-	_staff_lines = new ArdourCanvas::LineSet (_v_scroll_group.get(), ArdourCanvas::LineSet::Horizontal);
+	_staff_lines = std::make_unique<Engrave::StaffLineSet> (_render_context, _v_scroll_group.get());
 	_staff_lines->set_x_position (20);
-	_staff_lines->set_extent (ArdourCanvas::COORD_MAX);
 }
 
 MidiScorePage::~MidiScorePage() {}
@@ -136,15 +136,7 @@ MidiScorePage::set_session (ARDOUR::Session *s)
 		auto *g = new Engrave::GlyphItem (_render_context, _v_scroll_group.get(), Engrave::Glyph::kCClef);
 		g->set_position ({ 80, y - _render_context.line_distance() * 2 });
 
-		_staff_lines->add_coord (y, _render_context.staff_line_thickness(), 0x000000ff);
-		_staff_lines->add_coord (y - _render_context.line_distance(), _render_context.staff_line_thickness(),
-		                         0x000000ff);
-		_staff_lines->add_coord (y - _render_context.line_distance() * 2,
-		                         _render_context.staff_line_thickness(), 0x000000ff);
-		_staff_lines->add_coord (y - _render_context.line_distance() * 3,
-		                         _render_context.staff_line_thickness(), 0x000000ff);
-		_staff_lines->add_coord (y - _render_context.line_distance() * 4,
-		                         _render_context.staff_line_thickness(), 0x000000ff);
+		_staff_lines->add_staff (y);
 
 		y += 120;
 	}
