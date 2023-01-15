@@ -27,6 +27,7 @@
 #include "ardour/session_handle.h"
 
 #include "widgets/tabbable.h"
+#include "engrave/render_context.h"
 
 namespace ArdourCanvas {
 class GtkCanvas;
@@ -57,6 +58,8 @@ private:
 	std::unique_ptr<ArdourCanvas::ScrollGroup> _v_scroll_group;
 
 	ArdourCanvas::LineSet *_staff_lines = nullptr;
+
+    Engrave::RenderContext _render_context;
 };
 
 #endif // __gtk_ardour_midi_score_page_h__

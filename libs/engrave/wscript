@@ -29,6 +29,7 @@ engrave_sources = [
     'font_data.cc',
     'glyph.cc',
     'key_signature.cc',
+    'render_context.cc',
 ]
 
 engrave_use = [
@@ -37,6 +38,7 @@ engrave_use = [
 
 engrave_uselibs = [
     'BOOST',
+    'CAIROMM',
     'GLIBMM',
 ]
 
@@ -72,8 +74,8 @@ def build(bld):
     obj.uselib       = engrave_uselibs
     obj.use          = engrave_use
 
-    #bld.install_files(bld.env['DATADIR'], 'fonts/Leland/Leland.otf')
-    #bld.install_files(bld.env['DATADIR'], 'fonts/Leland/leland_metadata.json')
+    bld.install_files(bld.env['DATADIR'], 'fonts/Leland/Leland.otf')
+    bld.install_files(bld.env['DATADIR'], 'fonts/Leland/leland_metadata.json')
 
     if bld.env['BUILD_TESTS'] and bld.is_defined('HAVE_GTEST'):
         # Static library (for unit test code coverage)

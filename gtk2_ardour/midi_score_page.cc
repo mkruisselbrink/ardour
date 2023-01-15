@@ -57,14 +57,9 @@ private:
 
 class Glyph : public ArdourCanvas::Item {
 public:
-	Glyph (ArdourCanvas::Item *parent, Engrave::Glyph g) : ArdourCanvas::Item (parent)
+	Glyph (const Engrave::RenderContext &context, ArdourCanvas::Item *parent, Engrave::Glyph g)
+	    : ArdourCanvas::Item (parent), _context (context)
 	{
-		// TODO: no need to create a new Font instance for every glyph
-		Pango::FontDescription font_desc = UIConfiguration::instance().get_ScoreFont();
-		_font_face = Cairo::ToyFontFace::create (font_desc.get_family(), Cairo::FONT_SLANT_NORMAL,
-		                                         Cairo::FONT_WEIGHT_NORMAL);
-		_font
-		    = Cairo::ScaledFont::create (_font_face, Cairo::scaling_matrix (32, 32), Cairo::identity_matrix());
 		_text = Engrave::GlyphAsUTF8 (g);
 	}
 
@@ -73,7 +68,7 @@ public:
 	{
 		ArdourCanvas::Duple pos = item_to_window (ArdourCanvas::Duple (0, 0));
 		cr->set_source_rgb (0, 0, 0);
-		cr->set_scaled_font (_font);
+		cr->set_scaled_font (_context.font());
 
 		cr->move_to (pos.x, pos.y);
 		cr->show_text (_text);
@@ -83,22 +78,21 @@ public:
 	compute_bounding_box() const override
 	{
 		Cairo::TextExtents extents;
-		cairo_scaled_font_text_extents (const_cast<Cairo::ScaledFont::cobject *> (_font->cobj()),
-		                                _text.c_str(), &extents);
+		_context.text_extents (_text, extents);
 		_bounding_box = { extents.x_bearing, extents.y_bearing, extents.x_bearing + extents.width,
 			          extents.y_bearing + extents.height };
 		set_bbox_clean();
 	}
 
 private:
+	const Engrave::RenderContext &_context;
 	std::string _text;
-	Cairo::RefPtr<Cairo::FontFace> _font_face;
-	Cairo::RefPtr<Cairo::ScaledFont> _font;
 };
 
 class Clef : public Glyph {
 public:
-	Clef (ArdourCanvas::Item *parent, const Engrave::Clef &clef) : Glyph (parent, clef.glyph)
+	Clef (const Engrave::RenderContext &context, ArdourCanvas::Item *parent, const Engrave::Clef &clef)
+	    : Glyph (context, parent, clef.glyph)
 	{
 		/*		set_font_description (UIConfiguration::instance().get_ScoreFont());
 		                std::cerr << "Font size: " << UIConfiguration::instance().get_ScoreFont().get_size() <<
@@ -112,7 +106,8 @@ private:
 
 MidiScorePage::MidiScorePage()
     : Tabbable (_content, _ ("Score"), X_ ("score")), _vertical_adjustment (0.0, 0.0, 1e16),
-      _horizontal_adjustment (0.0, 0.0, 1e16)
+      _horizontal_adjustment (0.0, 0.0, 1e16),
+      _render_context (UIConfiguration::instance().get_ScoreFont().get_family(), 10)
 {
 	_canvas_viewport
 	    = std::make_unique<ArdourCanvas::GtkCanvasViewport> (_horizontal_adjustment, _vertical_adjustment);
@@ -194,21 +189,26 @@ MidiScorePage::set_session (ARDOUR::Session *s)
 		txt->set_position ({ 0, y });
 		txt->show();
 
-		auto *clef = new ScoreCanvas::Clef (_v_scroll_group.get(), Engrave::Clef::treble_clef);
-		clef->set_position ({ 20, y - 8 });
-		clef = new ScoreCanvas::Clef (_v_scroll_group.get(), Engrave::Clef::bass_clef);
-		clef->set_position ({ 50, y - 24 });
+		auto *clef
+		    = new ScoreCanvas::Clef (_render_context, _v_scroll_group.get(), Engrave::Clef::treble_clef);
+		clef->set_position ({ 20, y - _render_context.line_distance() });
+		clef = new ScoreCanvas::Clef (_render_context, _v_scroll_group.get(), Engrave::Clef::bass_clef);
+		clef->set_position ({ 50, y - _render_context.line_distance() * 3 });
 
-		auto *g = new ScoreCanvas::Glyph (_v_scroll_group.get(), Engrave::Glyph::kCClef);
-		g->set_position ({ 80, y - 16 });
+		auto *g = new ScoreCanvas::Glyph (_render_context, _v_scroll_group.get(), Engrave::Glyph::kCClef);
+		g->set_position ({ 80, y - _render_context.line_distance() * 2 });
 
-		_staff_lines->add_coord (y, 1.0, 0x000000ff);
-		_staff_lines->add_coord (y - 8, 1.0, 0x000000ff);
-		_staff_lines->add_coord (y - 16, 1.0, 0x000000ff);
-		_staff_lines->add_coord (y - 24, 1.0, 0x000000ff);
-		_staff_lines->add_coord (y - 32, 1.0, 0x000000ff);
+		_staff_lines->add_coord (y, _render_context.staff_line_thickness(), 0x000000ff);
+		_staff_lines->add_coord (y - _render_context.line_distance(), _render_context.staff_line_thickness(),
+		                         0x000000ff);
+		_staff_lines->add_coord (y - _render_context.line_distance() * 2,
+		                         _render_context.staff_line_thickness(), 0x000000ff);
+		_staff_lines->add_coord (y - _render_context.line_distance() * 3,
+		                         _render_context.staff_line_thickness(), 0x000000ff);
+		_staff_lines->add_coord (y - _render_context.line_distance() * 4,
+		                         _render_context.staff_line_thickness(), 0x000000ff);
 
-		y += 100;
+		y += 120;
 	}
 }
 
