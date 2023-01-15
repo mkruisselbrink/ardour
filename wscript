@@ -326,7 +326,7 @@ children = [
         'libs/canvas',
         'libs/widgets',
         'libs/waveview',
-        'libs/score',
+        'libs/engrave',
         'libs/plugins/reasonablesynth.lv2',
         'libs/plugins/a-comp.lv2',
         'libs/plugins/a-exp.lv2',
@@ -352,7 +352,6 @@ children = [
         'libs/vfork',
         'libs/ardouralsautil',
         'libs/auscan',
-        'libs/smufl',
 ]
 
 i18n_children = [

@@ -16,16 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef SCORE_CLEF_H_
-#define SCORE_CLEF_H_
+#ifndef ENGRAVE_CLEF_H_
+#define ENGRAVE_CLEF_H_
 
-#include "smufl/glyph.h"
+#include "engrave/glyph.h"
 
-namespace Score {
+namespace Engrave {
 
 struct Clef {
 	const char *const name;
-	const SMuFL::Glyph glyph;
+	const Glyph glyph;
 	// 0 = bottom line, 8 = top line
 	const int clef_position;
 	// midi note number at position
@@ -58,6 +58,6 @@ struct Clef {
 // Terminated by nullptr.
 extern Clef *g_clefs[];
 
-} // namespace Score
+} // namespace Engrave
 
-#endif // SCORE_CLEF_H_
+#endif // ENGRAVE_CLEF_H_

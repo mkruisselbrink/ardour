@@ -18,19 +18,18 @@
 
 #include "midi_score_header.h"
 
-#include "score/clef.h"
-
-#include "smufl/glyph.h"
-
-#include "score/key_signature.h"
+#include "engrave/clef.h"
+#include "engrave/key_signature.h"
+#include "engrave/glyph.h"
 
 #include "midi_score_streamview.h"
 
 void
 MidiScoreHeader::set_meter (const Temporal::Meter &meter)
 {
-	if (meter == _meter)
+	if (meter == _meter) {
 		return;
+	}
 	_meter = meter;
 	queue_draw();
 }
@@ -73,8 +72,8 @@ MidiScoreHeader::on_expose_event (GdkEventExpose *ev)
 	double x = get_width();
 	{
 		// TODO: multi-digit numbers
-		std::string ts_top = SMuFL::GlyphAsUTF8 (SMuFL::time_signature_digits[_meter.divisions_per_bar()]);
-		std::string ts_bottom = SMuFL::GlyphAsUTF8 (SMuFL::time_signature_digits[_meter.note_value()]);
+		std::string ts_top = Engrave::GlyphAsUTF8 (Engrave::time_signature_digits[_meter.divisions_per_bar()]);
+		std::string ts_bottom = Engrave::GlyphAsUTF8 (Engrave::time_signature_digits[_meter.note_value()]);
 		Cairo::TextExtents top_extents, bottom_extents;
 		cr->get_text_extents (ts_top, top_extents);
 		cr->get_text_extents (ts_bottom, bottom_extents);
@@ -87,55 +86,59 @@ MidiScoreHeader::on_expose_event (GdkEventExpose *ev)
 		cr->show_text (ts_top);
 	}
 
-	const Score::Clef *clef = _view.clef();
+	const Engrave::Clef *clef = _view.clef();
 	if (clef) {
 		uint8_t lowest = clef->lowest_note_on_bar();
 
-		const Score::KeySignature *ks = _view.key_signature();
+		const Engrave::KeySignature *ks = _view.key_signature();
 		if (ks) {
 			x -= 5;
 
 			std::vector<uint8_t> sharps = ks->sharps();
-			std::string sharp = SMuFL::GlyphAsUTF8 (SMuFL::Glyph::kAccidentalSharp);
+			std::string sharp = Engrave::GlyphAsUTF8 (Engrave::Glyph::kAccidentalSharp);
 			Cairo::TextExtents sharp_extents;
 			cr->get_text_extents (sharp, sharp_extents);
 			for (int i = sharps.size() - 1; i >= 0; --i) {
 				x -= sharp_extents.width;
 				uint8_t note = sharps[i];
-				while (note < lowest)
+				while (note < lowest) {
 					note += 12;
+				}
 				int pos = clef->position_for_note (note);
-				if (pos < clef->key_signature_sharp_offset)
+				if (pos < clef->key_signature_sharp_offset) {
 					pos += 7;
+				}
 				cr->move_to (x, bottom_line - line_distance / 2 * pos);
 				cr->show_text (sharp);
 			}
 
 			std::vector<uint8_t> flats = ks->flats();
-			std::string flat = SMuFL::GlyphAsUTF8 (SMuFL::Glyph::kAccidentalFlat);
+			std::string flat = Engrave::GlyphAsUTF8 (Engrave::Glyph::kAccidentalFlat);
 			Cairo::TextExtents flat_extents;
 			cr->get_text_extents (flat, flat_extents);
 			for (int i = flats.size() - 1; i >= 0; --i) {
 				x -= flat_extents.width;
 				uint8_t note = flats[i];
-				while (note < lowest)
+				while (note < lowest) {
 					note += 12;
+				}
 				int pos = clef->position_for_note (note);
-				if (pos < clef->key_signature_flat_offset)
+				if (pos < clef->key_signature_flat_offset) {
 					pos += 7;
+				}
 				cr->move_to (x, bottom_line - line_distance / 2 * pos);
 				cr->show_text (flat);
 			}
 		}
 
-		std::string s = SMuFL::GlyphAsUTF8 (clef->glyph);
+		std::string s = Engrave::GlyphAsUTF8 (clef->glyph);
 		Cairo::TextExtents extents;
 		cr->get_text_extents (s, extents);
 		std::cerr << "Clef extents: " << extents.width << "x" << extents.height
 			  << ", bearing: " << extents.x_bearing << ", advance: " << extents.x_advance << std::endl;
 		x -= extents.width + 2 * spacing;
 		cr->move_to (x, bottom_line - line_distance * clef->clef_position / 2);
-		cr->show_text (SMuFL::GlyphAsUTF8 (clef->glyph));
+		cr->show_text (Engrave::GlyphAsUTF8 (clef->glyph));
 	}
 
 	return true;

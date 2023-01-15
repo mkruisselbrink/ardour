@@ -16,11 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "score/clef.h"
+#include "engrave/clef.h"
 
 #include <gtest/gtest.h>
 
-namespace Score {
+namespace Engrave {
 
 TEST (ClefTest, positionForNoteForPosition)
 {
@@ -53,4 +53,4 @@ TEST (ClefTest, highestNoteOnBar)
 	EXPECT_EQ (uint8_t{ 57 }, Clef::bass_clef.highest_note_on_bar());
 }
 
-} // namespace Score
+} // namespace Engrave

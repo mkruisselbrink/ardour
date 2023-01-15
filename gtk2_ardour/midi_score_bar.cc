@@ -18,16 +18,14 @@
 
 #include "midi_score_bar.h"
 
-#include "score/clef.h"
-#include "smufl/glyph.h"
-
-#include "score/key_signature.h"
+#include "engrave/clef.h"
+#include "engrave/key_signature.h"
+#include "engrave/glyph.h"
 
 #include "midi_score_streamview.h"
 
-namespace
-{
-using Accidental = Score::KeySignature::Accidental;
+namespace {
+using Accidental = Engrave::Accidental;
 using Beats = Temporal::Beats;
 
 struct PosAndAcc {
@@ -43,56 +41,56 @@ struct Chord {
 	std::vector<PosAndAcc> notes;
 };
 
-SMuFL::Glyph
+Engrave::Glyph
 glyph_for_accidental (Accidental a)
 {
 	assert (a != Accidental::kNone);
 	switch (a) {
 	case Accidental::kFlat:
-		return SMuFL::Glyph::kAccidentalFlat;
+		return Engrave::Glyph::kAccidentalFlat;
 	case Accidental::kSharp:
-		return SMuFL::Glyph::kAccidentalSharp;
+		return Engrave::Glyph::kAccidentalSharp;
 	case Accidental::kNatural:
-		return SMuFL::Glyph::kAccidentalNatural;
+		return Engrave::Glyph::kAccidentalNatural;
 	default:
-		return SMuFL::Glyph::kNumEntries;
+		return Engrave::Glyph::kNumEntries;
 	}
 }
 
 struct Rest {
-	SMuFL::Glyph g;
+	Engrave::Glyph g;
 	Beats b;
 	int line = 2;
 };
 
 Rest kRests[] = {
-	{ SMuFL::Glyph::kRestWhole, Beats (4, 0), 3 },
-	{ SMuFL::Glyph::kRestHalf, Beats (2, 0) },
-	{ SMuFL::Glyph::kRestQuarter, Beats (1, 0) },
-	{ SMuFL::Glyph::kRest8th, Beats (0, Temporal::ticks_per_beat / 2) },
-	{ SMuFL::Glyph::kRest16th, Beats (0, Temporal::ticks_per_beat / 4) },
-	{ SMuFL::Glyph::kRest32nd, Beats (0, Temporal::ticks_per_beat / 8) },
-	{ SMuFL::Glyph::kRest64th, Beats (0, Temporal::ticks_per_beat / 16) },
-	{ SMuFL::Glyph::kRest128th, Beats (0, Temporal::ticks_per_beat / 32) },
+	{ Engrave::Glyph::kRestWhole, Beats (4, 0), 3 },
+	{ Engrave::Glyph::kRestHalf, Beats (2, 0) },
+	{ Engrave::Glyph::kRestQuarter, Beats (1, 0) },
+	{ Engrave::Glyph::kRest8th, Beats (0, Temporal::ticks_per_beat / 2) },
+	{ Engrave::Glyph::kRest16th, Beats (0, Temporal::ticks_per_beat / 4) },
+	{ Engrave::Glyph::kRest32nd, Beats (0, Temporal::ticks_per_beat / 8) },
+	{ Engrave::Glyph::kRest64th, Beats (0, Temporal::ticks_per_beat / 16) },
+	{ Engrave::Glyph::kRest128th, Beats (0, Temporal::ticks_per_beat / 32) },
 };
 
 struct NoteShape {
-	SMuFL::Glyph notehead_glyph;
+	Engrave::Glyph notehead_glyph;
 	Beats b;
 	bool uses_stem = true;
 	int flag_count = 0;
 };
 
 NoteShape kNotes[] = {
-	{ SMuFL::Glyph::kNoteheadDoubleWhole, Beats (8, 0), false },
-	{ SMuFL::Glyph::kNoteheadWhole, Beats (4, 0), false },
-	{ SMuFL::Glyph::kNoteheadHalf, Beats (2, 0) },
-	{ SMuFL::Glyph::kNoteheadBlack, Beats (1, 0) },
-	{ SMuFL::Glyph::kNoteheadBlack, Beats (0, Temporal::ticks_per_beat / 2), true, 1 },
-	{ SMuFL::Glyph::kNoteheadBlack, Beats (0, Temporal::ticks_per_beat / 4), true, 2 },
-	{ SMuFL::Glyph::kNoteheadBlack, Beats (0, Temporal::ticks_per_beat / 8), true, 3 },
-	{ SMuFL::Glyph::kNoteheadBlack, Beats (0, Temporal::ticks_per_beat / 16), true, 4 },
-	{ SMuFL::Glyph::kNoteheadBlack, Beats (0, Temporal::ticks_per_beat / 32), true, 5 },
+	{ Engrave::Glyph::kNoteheadDoubleWhole, Beats (8, 0), false },
+	{ Engrave::Glyph::kNoteheadWhole, Beats (4, 0), false },
+	{ Engrave::Glyph::kNoteheadHalf, Beats (2, 0) },
+	{ Engrave::Glyph::kNoteheadBlack, Beats (1, 0) },
+	{ Engrave::Glyph::kNoteheadBlack, Beats (0, Temporal::ticks_per_beat / 2), true, 1 },
+	{ Engrave::Glyph::kNoteheadBlack, Beats (0, Temporal::ticks_per_beat / 4), true, 2 },
+	{ Engrave::Glyph::kNoteheadBlack, Beats (0, Temporal::ticks_per_beat / 8), true, 3 },
+	{ Engrave::Glyph::kNoteheadBlack, Beats (0, Temporal::ticks_per_beat / 16), true, 4 },
+	{ Engrave::Glyph::kNoteheadBlack, Beats (0, Temporal::ticks_per_beat / 32), true, 5 },
 };
 
 } // namespace
@@ -115,8 +113,9 @@ MidiScoreBar::line_distance_changed()
 void
 MidiScoreBar::set_width (double w)
 {
-	if (w == _width)
+	if (w == _width) {
 		return;
+	}
 	begin_change();
 	_width = w;
 	compute_bounding_box();
@@ -128,8 +127,9 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 {
 	ArdourCanvas::Rect self = item_to_window (ArdourCanvas::Rect (0, -_view.line_distance() * 4, _width, 0));
 	ArdourCanvas::Rect isect = self.intersection (area);
-	if (!isect)
+	if (!isect) {
 		return;
+	}
 
 	cr->set_source_rgb (0, 0, 0);
 	cr->set_line_width (1);
@@ -142,15 +142,15 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 
 	if (_notes.empty()) {
 		Cairo::TextExtents extents;
-		std::string s = SMuFL::GlyphAsUTF8 (SMuFL::Glyph::kRestWhole);
+		std::string s = Engrave::GlyphAsUTF8 (Engrave::Glyph::kRestWhole);
 		cr->get_text_extents (s, extents);
 		cr->move_to ((self.x1 - self.x0) / 2 + self.x0 - extents.width / 2,
 		             self.y1 - _view.line_distance() * 3);
 		cr->show_text (s);
 	} else {
 		double x = self.x0 + 5;
-		const Score::Clef *clef = _view.clef();
-		const Score::KeySignature *ks = _view.key_signature();
+		const Engrave::Clef *clef = _view.clef();
+		const Engrave::KeySignature *ks = _view.key_signature();
 		double ld = _view.line_distance();
 
 		// simplest algorithm:
@@ -218,14 +218,14 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 			// Fill in gap with rests
 			if (c.position > last_end) {
 				Beats rest_length = c.position - last_end;
-				//std::cerr << rest_length << " worth of rests" << std::endl;
-				// TODO: take time signature into account, and round to whole beats first etc.
+				// std::cerr << rest_length << " worth of rests" << std::endl;
+				//  TODO: take time signature into account, and round to whole beats first etc.
 				for (const auto &r : kRests) {
-					//std::cerr << "Checking for " << r.b << " as rest." << std::endl;
+					// std::cerr << "Checking for " << r.b << " as rest." << std::endl;
 					while (rest_length >= r.b) {
 						rest_length -= r.b;
 
-						std::string s = SMuFL::GlyphAsUTF8 (r.g);
+						std::string s = Engrave::GlyphAsUTF8 (r.g);
 						Cairo::TextExtents rest_extents;
 						cr->get_text_extents (s, rest_extents);
 						cr->move_to (x, self.y1 - r.line * ld);
@@ -238,20 +238,22 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 
 			// TODO: preprocess into correct note segments
 			NoteShape *note_shape = kNotes;
-			while (note_shape->b > c.duration)
+			while (note_shape->b > c.duration) {
 				note_shape++;
+			}
 
-			std::string s = SMuFL::GlyphAsUTF8 (note_shape->notehead_glyph);
+			std::string s = Engrave::GlyphAsUTF8 (note_shape->notehead_glyph);
 			Cairo::TextExtents note_extents;
 			cr->get_text_extents (s, note_extents);
 
 			double x_offset = 0;
 			for (const auto &n : c.notes) {
-				if (n.accidental == Accidental::kNone)
+				if (n.accidental == Accidental::kNone) {
 					continue;
+				}
 
 				auto g = glyph_for_accidental (n.accidental);
-				std::string gs = SMuFL::GlyphAsUTF8 (g);
+				std::string gs = Engrave::GlyphAsUTF8 (g);
 				Cairo::TextExtents acc_extents;
 				cr->get_text_extents (gs, acc_extents);
 				x_offset = std::max (x_offset, acc_extents.width + 4);
@@ -285,8 +287,9 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 			last_position = -9999;
 
 			double leger_note_length = note_extents.width;
-			if (has_notes_on_right)
+			if (has_notes_on_right) {
 				leger_note_length += right_note_offset;
+			}
 
 			for (const auto &n : c.notes) {
 				top_note_position = std::max (top_note_position, n.position);
@@ -328,8 +331,9 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 			// Chord stem
 			if (note_shape->uses_stem) {
 				int stem_length = 4;
-				if (note_shape->flag_count > 2)
+				if (note_shape->flag_count > 2) {
 					stem_length += note_shape->flag_count - 2;
+				}
 
 				cr->set_line_width (stem_width);
 				bool stem_down = top_note_position > 4;
@@ -338,20 +342,21 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 				if (stem_down) {
 					// down
 					double stemx = 0.0 + 0.5 * stem_width;
-					if (has_notes_on_right)
+					if (has_notes_on_right) {
 						stemx += right_note_offset;
+					}
 					// TODO: depending on where the top-note is, this migth have to use the other
 					// corner of the note head
 					cr->move_to (x + stemx, top_y + 0.168 * ld);
 					cr->line_to (x + stemx, bottom_y + stem_length * ld);
 
 					if (note_shape->flag_count) {
-						SMuFL::Glyph flag_g = note_shape->flag_count == 1
-						                          ? SMuFL::Glyph::kFlag8thDown
-						                          : SMuFL::Glyph::kFlag16thDown;
+						Engrave::Glyph flag_g = note_shape->flag_count == 1
+						                          ? Engrave::Glyph::kFlag8thDown
+						                          : Engrave::Glyph::kFlag16thDown;
 						cr->move_to (x + stemx - 0.5 * stem_width,
 						             bottom_y + stem_length * ld);
-						std::string flag_s = SMuFL::GlyphAsUTF8 (flag_g);
+						std::string flag_s = Engrave::GlyphAsUTF8 (flag_g);
 						cr->show_text (flag_s);
 					}
 				} else {
@@ -361,11 +366,11 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 					cr->line_to (x + stemx, top_y - stem_length * ld);
 
 					if (note_shape->flag_count) {
-						SMuFL::Glyph flag_g = note_shape->flag_count == 1
-						                          ? SMuFL::Glyph::kFlag8thUp
-						                          : SMuFL::Glyph::kFlag16thUp;
+						Engrave::Glyph flag_g = note_shape->flag_count == 1
+						                          ? Engrave::Glyph::kFlag8thUp
+						                          : Engrave::Glyph::kFlag16thUp;
 						cr->move_to (x + stemx - 0.5 * stem_width, top_y - stem_length * ld);
-						std::string flag_s = SMuFL::GlyphAsUTF8 (flag_g);
+						std::string flag_s = Engrave::GlyphAsUTF8 (flag_g);
 						cr->show_text (flag_s);
 					}
 				}
@@ -374,8 +379,9 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 
 			// TODO: evenly distribute
 			x += note_extents.width + 2 + x_offset;
-			if (has_notes_on_right)
+			if (has_notes_on_right) {
 				x += right_note_offset;
+			}
 		}
 	}
 }

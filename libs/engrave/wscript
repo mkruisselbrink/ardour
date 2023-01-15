@@ -11,30 +11,36 @@ out = 'build'
 MAJOR = '0'
 MINOR = '0'
 MICRO = '0'
-SCORE_VERSION = "%s.%s.%s" % (MAJOR, MINOR, MICRO)
+ENGRAVE_VERSION = "%s.%s.%s" % (MAJOR, MINOR, MICRO)
 
 # Library version (UNIX style major, minor, micro)
 # major increment <=> incompatible changes
 # minor increment <=> compatible changes (additions)
 # micro increment <=> no interface changes
-SCORE_LIB_VERSION = '0.0.0'
+ENGRAVE_LIB_VERSION = '0.0.0'
 
 # Variables for 'waf dist'
-APPNAME = 'score'
-VERSION = SCORE_VERSION
-I18N_PACKAGE = 'libscore'
+APPNAME = 'engrave'
+VERSION = ENGRAVE_VERSION
+I18N_PACKAGE = 'libengrave'
 
-score_sources = [
+engrave_sources = [
     'clef.cc',
+    'font_data.cc',
+    'glyph.cc',
     'key_signature.cc',
 ]
 
-score_deps = [
+engrave_use = [
     'libpbd',
-    'libsmufl',
 ]
 
-path_prefix = 'libs/score'
+engrave_uselibs = [
+    'BOOST',
+    'GLIBMM',
+]
+
+path_prefix = 'libs/engrave'
 
 def options(opt):
     autowaf.set_options(opt)
@@ -48,23 +54,23 @@ def configure(conf):
 def build(bld):
     # Library
     if bld.is_defined ('INTERNAL_SHARED_LIBS'):
-        obj = bld.shlib(features = 'cxx cxxshlib', source=score_sources)
+        obj = bld.shlib(features = 'cxx cxxshlib', source=engrave_sources)
         obj.defines = [ 'LIBSMUFL_DLL_EXPORTS=1' ]
     else:
-        obj = bld.stlib(features = 'cxx cxxstlib', source=score_sources)
+        obj = bld.stlib(features = 'cxx cxxstlib', source=engrave_sources)
         obj.cxxflags = [ bld.env['compiler_flags_dict']['pic'] ]
         obj.cflags   = [ bld.env['compiler_flags_dict']['pic'] ]
         obj.defines  = []
     
     obj.export_includes = ['.']
     obj.includes     = ['.']
-    obj.name         = 'libscore'
-    obj.target       = 'score'
-    obj.vnum         = SCORE_LIB_VERSION
+    obj.name         = 'libengrave'
+    obj.target       = 'engrave'
+    obj.vnum         = ENGRAVE_LIB_VERSION
     obj.install_path = bld.env['LIBDIR']
     obj.defines     += [ 'PACKAGE="' + I18N_PACKAGE + '"' ]
-    obj.uselib       = [ 'BOOST', 'GLIBMM' ]
-    obj.use          = score_deps
+    obj.uselib       = engrave_uselibs
+    obj.use          = engrave_use
 
     #bld.install_files(bld.env['DATADIR'], 'fonts/Leland/Leland.otf')
     #bld.install_files(bld.env['DATADIR'], 'fonts/Leland/leland_metadata.json')
@@ -72,20 +78,20 @@ def build(bld):
     if bld.env['BUILD_TESTS'] and bld.is_defined('HAVE_GTEST'):
         # Static library (for unit test code coverage)
         obj = bld(features = 'cxx cstlib')
-        obj.source         = score_sources
+        obj.source         = engrave_sources
         obj.export_includes = ['.']
         obj.includes       = ['.']
-        obj.name           = 'libscore_static'
-        obj.target         = 'score_static'
-        obj.uselib         = [ 'BOOST', 'GLIBMM' ]
-        obj.use            = score_deps
-        obj.vnum           = SCORE_LIB_VERSION
+        obj.name           = 'libengrave_static'
+        obj.target         = 'engrave_static'
+        obj.uselib         = engrave_uselibs
+        obj.use            = engrave_use
+        obj.vnum           = ENGRAVE_LIB_VERSION
         obj.install_path   = ''
         if bld.env['TEST_COVERAGE']:
              obj.linkflags      = ['--coverage']
              obj.cflags         = ['--coverage']
              obj.cxxflags       = ['--coverage']
-        obj.defines        = ['PACKAGE="libscore"']
+        obj.defines        = ['PACKAGE="libengrave"']
 
         # Unit tests
         obj              = bld(features = 'cxx cxxprogram')
@@ -94,12 +100,12 @@ def build(bld):
                 'test/key_signature_test.cc',
                 ]
         obj.includes     = ['.']
-        obj.use          = ['libscore_static']
-        obj.uselib       = ['GLIBMM', 'GTEST_MAIN']
+        obj.use          = ['libengrave_static']
+        obj.uselib       = ['GTEST_MAIN']
         obj.target       = 'run-tests'
-        obj.name         = 'libscore-tests'
+        obj.name         = 'libengrave-tests'
         obj.install_path = ''
-        obj.defines      = ['PACKAGE="libscoretest"']
+        obj.defines      = ['PACKAGE="libengravetest"']
         if bld.env['TEST_COVERAGE']:
             obj.linkflags      = ['--coverage']
             obj.cflags         = ['--coverage']

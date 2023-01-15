@@ -1,0 +1,50 @@
+/*
+ * Copyright (C) 2023 Marijn Kruisselbrink <mek@google.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#ifndef ENGRAVE_GLYPH_H
+#define ENGRAVE_GLYPH_H
+
+#include <ostream>
+#include <string>
+
+#include <boost/optional.hpp>
+
+namespace Engrave {
+
+enum class Glyph {
+#include "engrave/smufl/glyph_ids.h"
+	kNumEntries,
+	kNone = -1
+};
+
+constexpr Glyph time_signature_digits[] = {
+	Glyph::kTimeSig0, Glyph::kTimeSig1, Glyph::kTimeSig2, Glyph::kTimeSig3, Glyph::kTimeSig4,
+	Glyph::kTimeSig5, Glyph::kTimeSig6, Glyph::kTimeSig7, Glyph::kTimeSig8, Glyph::kTimeSig9,
+};
+
+extern const char *GlyphName (Glyph g);
+extern const char *GlyphDescription (Glyph g);
+extern uint16_t GlyphCodePoint (Glyph g);
+extern std::string GlyphAsUTF8 (Glyph g);
+extern boost::optional<Glyph> GlyphFromName (const std::string &name);
+
+extern std::ostream &operator<< (std::ostream &os, Glyph g);
+
+} // namespace Engrave
+
+#endif // ENGRAVE_GLYPH_H

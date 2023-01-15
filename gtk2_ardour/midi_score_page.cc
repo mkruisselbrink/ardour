@@ -34,12 +34,9 @@
 #include "canvas/rectangle.h"
 #include "canvas/scroll_group.h"
 #include "canvas/text.h"
-
+#include "engrave/clef.h"
+#include "engrave/glyph.h"
 #include "gtkmm2ext/colors.h"
-
-#include "score/clef.h"
-
-#include "smufl/glyph.h"
 
 #include "ui_config.h"
 
@@ -60,7 +57,7 @@ private:
 
 class Glyph : public ArdourCanvas::Item {
 public:
-	Glyph (ArdourCanvas::Item *parent, SMuFL::Glyph g) : ArdourCanvas::Item (parent)
+	Glyph (ArdourCanvas::Item *parent, Engrave::Glyph g) : ArdourCanvas::Item (parent)
 	{
 		// TODO: no need to create a new Font instance for every glyph
 		Pango::FontDescription font_desc = UIConfiguration::instance().get_ScoreFont();
@@ -68,7 +65,7 @@ public:
 		                                         Cairo::FONT_WEIGHT_NORMAL);
 		_font
 		    = Cairo::ScaledFont::create (_font_face, Cairo::scaling_matrix (32, 32), Cairo::identity_matrix());
-		_text = SMuFL::GlyphAsUTF8 (g);
+		_text = Engrave::GlyphAsUTF8 (g);
 	}
 
 	void
@@ -101,11 +98,11 @@ private:
 
 class Clef : public Glyph {
 public:
-	Clef (ArdourCanvas::Item *parent, const Score::Clef &clef) : Glyph (parent, clef.glyph)
+	Clef (ArdourCanvas::Item *parent, const Engrave::Clef &clef) : Glyph (parent, clef.glyph)
 	{
 		/*		set_font_description (UIConfiguration::instance().get_ScoreFont());
 		                std::cerr << "Font size: " << UIConfiguration::instance().get_ScoreFont().get_size() <<
-		   std::endl; set_adjust_for_baseline (true); set (SMuFL::GlyphAsUTF8 (clef.glyph));*/
+		   std::endl; set_adjust_for_baseline (true); set (Engrave::GlyphAsUTF8 (clef.glyph));*/
 	}
 
 private:
@@ -155,15 +152,17 @@ MidiScorePage::MidiScorePage()
 	r->set_fill_color (Gtkmm2ext::rgba_to_color (1.0, 0.0, 0.0, 0.2));
 	r->show();
 
-	r = new ArdourCanvas::Rectangle (_hv_scroll_group.get(), ArdourCanvas::Rect (100.0, 0.0, 250.0, 250.0));
+	r = new ArdourCanvas::Rectangle (_hv_scroll_group.get(),
+	                                 ArdourCanvas::Rect (100.0, 0.0, 200, ArdourCanvas::COORD_MAX));
 	CANVAS_DEBUG_NAME (r, "rect2");
 	r->set_fill (true);
-	r->set_outline (true);
+	// r->set_outline (true);
 	r->set_outline_color (Gtkmm2ext::rgba_to_color (0, 0, 0, 1.0));
-	r->set_fill_color (Gtkmm2ext::rgba_to_color (0.0, 0.0, 1.0, 0.2));
+	r->set_fill_color (Gtkmm2ext::rgba_to_color (0.0, 0.0, 1.0, 0.1));
 	r->show();
 
 	_staff_lines = new ArdourCanvas::LineSet (_v_scroll_group.get(), ArdourCanvas::LineSet::Horizontal);
+	_staff_lines->set_x_position (20);
 	_staff_lines->set_extent (ArdourCanvas::COORD_MAX);
 }
 
@@ -195,12 +194,12 @@ MidiScorePage::set_session (ARDOUR::Session *s)
 		txt->set_position ({ 0, y });
 		txt->show();
 
-		auto *clef = new ScoreCanvas::Clef (_v_scroll_group.get(), Score::Clef::treble_clef);
+		auto *clef = new ScoreCanvas::Clef (_v_scroll_group.get(), Engrave::Clef::treble_clef);
 		clef->set_position ({ 20, y - 8 });
-		clef = new ScoreCanvas::Clef (_v_scroll_group.get(), Score::Clef::bass_clef);
+		clef = new ScoreCanvas::Clef (_v_scroll_group.get(), Engrave::Clef::bass_clef);
 		clef->set_position ({ 50, y - 24 });
 
-		auto *g = new ScoreCanvas::Glyph (_v_scroll_group.get(), SMuFL::Glyph::kCClef);
+		auto *g = new ScoreCanvas::Glyph (_v_scroll_group.get(), Engrave::Glyph::kCClef);
 		g->set_position ({ 80, y - 16 });
 
 		_staff_lines->add_coord (y, 1.0, 0x000000ff);

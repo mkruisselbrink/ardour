@@ -21,13 +21,13 @@
 
 #include "streamview.h"
 
-#include "score/key_signature.h"
+#include "engrave/key_signature.h"
 
 namespace ArdourCanvas {
 class LineSet;
 }
 
-namespace Score {
+namespace Engrave {
 class Clef;
 }
 
@@ -65,13 +65,13 @@ public:
 		return _line_distance;
 	}
 
-	const Score::Clef *
+	const Engrave::Clef *
 	clef() const
 	{
 		return _clef;
 	}
 
-	const Score::KeySignature *
+	const Engrave::KeySignature *
 	key_signature() const
 	{
 		return &_key_signature;
@@ -93,8 +93,8 @@ private:
 	uint8_t _data_note_max = 0;
 	Temporal::timepos_t _data_last_time;
 
-	Score::Clef *_clef = nullptr;
-	Score::KeySignature _key_signature;
+	Engrave::Clef *_clef = nullptr;
+	Engrave::KeySignature _key_signature;
 };
 
 #endif /* __gtk_ardour_midi_score_streamview_h__ */

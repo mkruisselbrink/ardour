@@ -16,36 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef SMUFL_GLYPH_H
-#define SMUFL_GLYPH_H
+#ifndef ENGRAVE_TYPES_H_
+#define ENGRAVE_TYPES_H_
 
-#include <ostream>
-#include <string>
+#include <cstdint>
+#include <vector>
 
-#include <boost/optional.hpp>
+namespace Engrave {
 
-namespace SMuFL
-{
+enum class Accidental { kNone, kNatural, kSharp, kFlat };
 
-enum class Glyph {
-#include "smufl/data/glyph_ids.h"
-	kNumEntries,
-    kNone = -1
-};
+enum class Scale { kMajor, kMinor };
 
-constexpr Glyph time_signature_digits[] = {
-	Glyph::kTimeSig0, Glyph::kTimeSig1, Glyph::kTimeSig2, Glyph::kTimeSig3, Glyph::kTimeSig4,
-	Glyph::kTimeSig5, Glyph::kTimeSig6, Glyph::kTimeSig7, Glyph::kTimeSig8, Glyph::kTimeSig9,
-};
+} // namespace Engrave
 
-extern const char *GlyphName (Glyph g);
-extern const char *GlyphDescription (Glyph g);
-extern uint16_t GlyphCodePoint (Glyph g);
-extern std::string GlyphAsUTF8 (Glyph g);
-extern boost::optional<Glyph> GlyphFromName (const std::string &name);
-
-extern std::ostream &operator<< (std::ostream &os, Glyph g);
-
-} // namespace SMuFL
-
-#endif // SMUFL_GLYPH_H
+#endif // ENGRAVE_TYPES_H_

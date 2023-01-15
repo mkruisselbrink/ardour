@@ -16,7 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "smufl/font_data.h"
+#include "engrave/font_data.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -25,9 +25,7 @@
 
 namespace pt = boost::property_tree;
 
-#define debug info
-
-namespace SMuFL {
+namespace Engrave {
 
 namespace {
 
@@ -87,7 +85,7 @@ FontData::LoadFromJSON (const std::string &file_name)
 		_engraving_defaults.name = val;                                                                       \
 	}
 #define ENGRAVING_DEFAULT_SELF _engraving_defaults.
-#include "smufl/data/font_data_engraving_defaults_fields.h"
+#include "engrave/smufl/font_data_engraving_defaults_fields.h"
 #undef ENGRAVING_DEFAULT_SELF
 #undef ENGRAVING_DEFAULTS_FLOAT_FIELD
 
@@ -138,7 +136,7 @@ operator<< (std::ostream &os, const EngravingDefaults &ed)
 {
 #define ENGRAVING_DEFAULTS_FLOAT_FIELD(name, default) os << "    " << #name " = " << ed.name << std::endl;
 #define ENGRAVING_DEFAULT_SELF
-#include "smufl/data/font_data_engraving_defaults_fields.h"
+#include "engrave/smufl/font_data_engraving_defaults_fields.h"
 #undef ENGRAVING_DEFAULT_SELF
 #undef ENGRAVING_DEFAULTS_FLOAT_FIELD
 	os << "    textFontFamily: ";
@@ -207,4 +205,4 @@ operator<< (std::ostream &os, const FontData &fd)
 	return os;
 }
 
-} // namespace SMuFL
+} // namespace Engrave

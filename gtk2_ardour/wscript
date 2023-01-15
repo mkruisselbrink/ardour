@@ -574,8 +574,7 @@ def build(bld):
                 'libwaveview',
                 'libwidgets',
                 'libptformat',
-                'libsmufl',
-                'libscore',
+                'libengrave',
                 ]
         obj.defines = [
                 'NOMAIN',
@@ -662,8 +661,7 @@ def build(bld):
                      'libwaveview',
                      'libwidgets',
                      'libptformat',
-                     'libsmufl',
-                     'libscore',
+                     'libengrave',
                      ]
 
     obj.defines = [

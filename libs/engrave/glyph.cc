@@ -16,31 +16,30 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "smufl/glyph.h"
+#include "engrave/glyph.h"
 
 #include <cassert>
+#include <iostream>
 #include <map>
 
 #include <glib.h>
 
-#include <iostream>
-
-namespace SMuFL {
+namespace Engrave {
 
 namespace {
 
 	const char *const g_glyph_names[] = {
-#include "smufl/data/glyph_names.h"
+#include "engrave/smufl/glyph_names.h"
 	};
 	static_assert (static_cast<size_t> (Glyph::kNumEntries) == std::size (g_glyph_names));
 
 	const char *const g_glyph_descriptions[] = {
-#include "smufl/data/glyph_descriptions.h"
+#include "engrave/smufl/glyph_descriptions.h"
 	};
 	static_assert (static_cast<size_t> (Glyph::kNumEntries) == std::size (g_glyph_descriptions));
 
 	const uint16_t g_code_points[] = {
-#include "smufl/data/glyph_codepoints.h"
+#include "engrave/smufl/glyph_codepoints.h"
 	};
 	static_assert (static_cast<size_t> (Glyph::kNumEntries) == std::size (g_code_points));
 
@@ -109,4 +108,4 @@ operator<< (std::ostream &os, Glyph g)
 	return os << GlyphName (g);
 }
 
-} // namespace SMuFL
+} // namespace Engrave

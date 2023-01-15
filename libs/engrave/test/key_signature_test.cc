@@ -16,11 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "score/key_signature.h"
+#include "engrave/key_signature.h"
 
 #include <gtest/gtest.h>
 
-namespace Score {
+namespace Engrave {
 
 namespace {
 	namespace Notes {
@@ -47,13 +47,13 @@ namespace {
 
 TEST (KeySignatureTest, baseNote)
 {
-	EXPECT_EQ (Notes::C, KeySignature (0, KeySignature::Scale::kMajor).base_note());
-	EXPECT_EQ (Notes::A, KeySignature (0, KeySignature::Scale::kMinor).base_note());
+	EXPECT_EQ (Notes::C, KeySignature (0, Scale::kMajor).base_note());
+	EXPECT_EQ (Notes::A, KeySignature (0, Scale::kMinor).base_note());
 	EXPECT_EQ (Notes::Cb, KeySignature (-7).base_note());
 	EXPECT_EQ (Notes::Gb, KeySignature (-6).base_note());
 	EXPECT_EQ (Notes::Db, KeySignature (-5).base_note());
-	EXPECT_EQ (Notes::Ab, KeySignature (-4, KeySignature::Scale::kMajor).base_note());
-	EXPECT_EQ (Notes::F, KeySignature (-4, KeySignature::Scale::kMinor).base_note());
+	EXPECT_EQ (Notes::Ab, KeySignature (-4, Scale::kMajor).base_note());
+	EXPECT_EQ (Notes::F, KeySignature (-4, Scale::kMinor).base_note());
 	EXPECT_EQ (Notes::Eb, KeySignature (-3).base_note());
 	EXPECT_EQ (Notes::Bb, KeySignature (-2).base_note());
 	EXPECT_EQ (Notes::F, KeySignature (-1).base_note());
@@ -62,18 +62,18 @@ TEST (KeySignatureTest, baseNote)
 	EXPECT_EQ (Notes::A, KeySignature (3).base_note());
 	EXPECT_EQ (Notes::E, KeySignature (4).base_note());
 	EXPECT_EQ (Notes::B, KeySignature (5).base_note());
-	EXPECT_EQ (Notes::Fs, KeySignature (6, KeySignature::Scale::kMajor).base_note());
-	EXPECT_EQ (Notes::Ds, KeySignature (6, KeySignature::Scale::kMinor).base_note());
+	EXPECT_EQ (Notes::Fs, KeySignature (6, Scale::kMajor).base_note());
+	EXPECT_EQ (Notes::Ds, KeySignature (6, Scale::kMinor).base_note());
 	EXPECT_EQ (Notes::Cs, KeySignature (7).base_note());
 }
 
 TEST (KeySignatureTest, sharpsOrFlats)
 {
-	KeySignature ks0 (0, KeySignature::Scale::kMajor);
+	KeySignature ks0 (0, Scale::kMajor);
 	EXPECT_TRUE (ks0.sharps().empty());
 	EXPECT_TRUE (ks0.flats().empty());
 
-	KeySignature ks7b (-7, KeySignature::Scale::kMinor);
+	KeySignature ks7b (-7, Scale::kMinor);
 	EXPECT_TRUE (ks7b.sharps().empty());
 	EXPECT_EQ (size_t{ 7 }, ks7b.flats().size());
 	EXPECT_EQ (Notes::B, ks7b.flats()[0]);
@@ -84,7 +84,7 @@ TEST (KeySignatureTest, sharpsOrFlats)
 	EXPECT_EQ (Notes::C, ks7b.flats()[5]);
 	EXPECT_EQ (Notes::F, ks7b.flats()[6]);
 
-	KeySignature ks7s (7, KeySignature::Scale::kMajor);
+	KeySignature ks7s (7, Scale::kMajor);
 	EXPECT_TRUE (ks7s.flats().empty());
 	EXPECT_EQ (size_t{ 7 }, ks7s.sharps().size());
 	EXPECT_EQ (Notes::F, ks7s.sharps()[0]);
@@ -99,59 +99,56 @@ TEST (KeySignatureTest, sharpsOrFlats)
 TEST (KeySignatureTest, noteAndAccidentalsToRender)
 {
 	constexpr uint8_t scale[7] = { 0, 2, 4, 5, 7, 9, 11 };
-		// Notes in the scale should all render without accidentals
-		for (int s_or_f = -7; s_or_f <= 7; s_or_f++) {
-			KeySignature ks (s_or_f);
-				for (int oct = 0; oct < 9; oct++) {
-						for (uint8_t scale_note : scale) {
-							uint8_t note = ks.base_note() + oct * 12 + scale_note;
-							EXPECT_EQ (
-							    KeySignature::Accidental::kNone,
-							    ks.note_and_accidentals_to_render (note).accidental);
-						}
-				}
+	// Notes in the scale should all render without accidentals
+	for (int s_or_f = -7; s_or_f <= 7; s_or_f++) {
+		KeySignature ks (s_or_f);
+		for (int oct = 0; oct < 9; oct++) {
+			for (uint8_t scale_note : scale) {
+				uint8_t note = ks.base_note() + oct * 12 + scale_note;
+				EXPECT_EQ (Accidental::kNone, ks.note_and_accidentals_to_render (note).accidental);
+			}
 		}
+	}
 
-		// Natural notes should always render without accidentals or with natural accidentals.
-	        // Depending on key signature it is possible for these to be rendered as a different note though (for
-	        // example an F in a key signature with an E-sharp).
-		for (int s_or_f = -7; s_or_f <= 7; s_or_f++) {
-			KeySignature ks (s_or_f);
-				for (int oct = 0; oct < 10; oct++) {
-						for (uint8_t scale_note : scale) {
-							uint8_t note = oct * 12 + scale_note;
-							auto a = ks.note_and_accidentals_to_render (note).accidental;
-							EXPECT_TRUE (a == KeySignature::Accidental::kNone
-							             || a == KeySignature::Accidental::kNatural);
-						}
-				}
+	// Natural notes should always render without accidentals or with natural accidentals.
+	// Depending on key signature it is possible for these to be rendered as a different note though (for
+	// example an F in a key signature with an E-sharp).
+	for (int s_or_f = -7; s_or_f <= 7; s_or_f++) {
+		KeySignature ks (s_or_f);
+		for (int oct = 0; oct < 10; oct++) {
+			for (uint8_t scale_note : scale) {
+				uint8_t note = oct * 12 + scale_note;
+				auto a = ks.note_and_accidentals_to_render (note).accidental;
+				EXPECT_TRUE (a == Accidental::kNone || a == Accidental::kNatural);
+			}
 		}
+	}
 
-		// If accidental is a sharp, note to render should be one lower than note, and vice versa for flats.
-		for (int s_or_f = -7; s_or_f <= 7; s_or_f++) {
-			KeySignature ks (s_or_f);
-				for (uint8_t note = 0; note <= 120; ++note) {
-					auto na = ks.note_and_accidentals_to_render (note);
-						switch (na.accidental) {
-						case KeySignature::Accidental::kNatural:
-							EXPECT_EQ (note, na.note);
-							break;
-						case KeySignature::Accidental::kFlat:
-							EXPECT_EQ (note + 1, int{ na.note });
-							break;
-						case KeySignature::Accidental::kSharp:
-							EXPECT_EQ (note - 1, int{ na.note });
-							break;
-						case KeySignature::Accidental::kNone:
-							// Could be same, higher, or lower. But always at most one
-							// difference.
-							EXPECT_LE (std::abs (na.note - note), 1);
-							break;
-						}
-				}
+	// If accidental is a sharp, note to render should be one lower than note, and vice versa for flats.
+	for (int s_or_f = -7; s_or_f <= 7; s_or_f++) {
+		KeySignature ks (s_or_f);
+		for (uint8_t note = 0; note <= 120; ++note) {
+			auto na = ks.note_and_accidentals_to_render (note);
+			switch (na.accidental) {
+			case Accidental::kNatural:
+				EXPECT_EQ (note, na.note);
+				break;
+			case Accidental::kFlat:
+				EXPECT_EQ (note + 1, int{ na.note });
+				break;
+			case Accidental::kSharp:
+				EXPECT_EQ (note - 1, int{ na.note });
+				break;
+			case Accidental::kNone:
+				// Could be same, higher, or lower. But always at most one
+				// difference.
+				EXPECT_LE (std::abs (na.note - note), 1);
+				break;
+			}
 		}
+	}
 
 	// TODO: Check consistency with `sharps` and `flats`
 }
 
-} // namespace Score
+} // namespace Engrave

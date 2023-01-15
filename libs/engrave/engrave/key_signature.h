@@ -16,34 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef SCORE_KEY_SIGNATURE_H_
-#define SCORE_KEY_SIGNATURE_H_
+#ifndef ENGRAVE_KEY_SIGNATURE_H_
+#define ENGRAVE_KEY_SIGNATURE_H_
 
 #include <cstdint>
 #include <vector>
 
-namespace Score {
+#include "engrave/types.h"
 
-enum class Accidental
-{
-	kNone,
-	kNatural,
-	kSharp,
-	kFlat
-};
+namespace Engrave {
 
 // Representation of a Key Signature. For now only supports "simple" major and
 // minor scales with at most 7 sharps or flat.
 class KeySignature
 {
 public:
-    using Accidental = Score::Accidental;
-	enum class Scale
-	{
-		kMajor,
-		kMinor
-	};
-
 	// flats_or_sharps should be in -7 - 7, negative numbers for flats, positive for sharps
 	KeySignature (int flats_or_sharps, Scale scale = Scale::kMajor);
 
@@ -74,6 +61,6 @@ private:
 	NoteAndAccidentals _notes[12];
 };
 
-} // namespace Score
+} // namespace Engrave
 
-#endif // SCORE_KEY_SIGNATURE_H_
+#endif // ENGRAVE_KEY_SIGNATURE_H_

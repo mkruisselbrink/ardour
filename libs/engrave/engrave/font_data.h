@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef SMUFL_FONT_DATA_H
-#define SMUFL_FONT_DATA_H
+#ifndef ENGRAVE_FONT_DATA_H
+#define ENGRAVE_FONT_DATA_H
 
 #include <map>
 #include <string>
@@ -25,15 +25,15 @@
 
 #include <boost/optional.hpp>
 
-#include "smufl/glyph.h"
+#include "engrave/glyph.h"
 
-namespace SMuFL {
+namespace Engrave {
 
 #define ENGRAVING_DEFAULTS_FLOAT_FIELD(name, default) float name = default;
 #define ENGRAVING_DEFAULT_SELF
 struct EngravingDefaults {
 	std::vector<std::string> textFontFamily;
-#include "smufl/data/font_data_engraving_defaults_fields.h"
+#include "engrave/smufl/font_data_engraving_defaults_fields.h"
 };
 #undef ENGRAVING_DEFAULT_SELF
 #undef ENGRAVING_DEFAULTS_FLOAT_FIELD
@@ -84,6 +84,6 @@ extern std::ostream &operator<< (std::ostream &os, const EngravingDefaults &ed);
 extern std::ostream &operator<< (std::ostream &os, const Offset &o);
 extern std::ostream &operator<< (std::ostream &os, const GlyphInfo &gi);
 
-} // namespace SMuFL
+} // namespace Engrave
 
-#endif // SMUFL_FONT_DATA_H
+#endif // ENGRAVE_FONT_DATA_H

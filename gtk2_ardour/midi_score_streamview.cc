@@ -25,7 +25,7 @@
 #include "ardour/midi_region.h"
 #include "ardour/midi_source.h"
 
-#include "score/clef.h"
+#include "engrave/clef.h"
 
 #include "gui_thread.h"
 #include "midi_score_bar.h"
@@ -43,9 +43,9 @@ MidiScoreStreamView::MidiScoreStreamView (MidiScoreTimeAxisView &tv)
 	_bar_lines->lower_to_bottom();
 	canvas_rect->lower_to_bottom();
 
-	// std::cerr << SMuFL::GlyphDescription(SMuFL::Glyph::kFClef) << std::endl;
-	// SMuFL::FontData fd;
-	// fd.LoadFromJSON("/home/mek/Source/ardour7/libs/smufl/fonts/Leland/leland_metadata.json");
+	// std::cerr << Engrave::GlyphDescription(Engrave::Glyph::kFClef) << std::endl;
+	// Engrave::FontData fd;
+	// fd.LoadFromJSON("/home/mek/Source/ardour7/libs/engrave/fonts/Leland/leland_metadata.json");
 	// std::cerr << fd;
 
 	color_handler();
@@ -87,13 +87,13 @@ MidiScoreStreamView::redisplay_track()
 	Temporal::BBT_Time bbt = tmap->bbt_at (_data_last_time);
 	std::cerr << "Last bar: " << bbt.bars << std::endl;
 
-	int bass_note_range = Score::Clef::bass_clef.notes_on_bar (_data_note_min, _data_note_max);
-	int treble_note_range = Score::Clef::treble_clef.notes_on_bar (_data_note_min, _data_note_max);
+	int bass_note_range = Engrave::Clef::bass_clef.notes_on_bar (_data_note_min, _data_note_max);
+	int treble_note_range = Engrave::Clef::treble_clef.notes_on_bar (_data_note_min, _data_note_max);
 	std::cerr << "Bass: " << bass_note_range << ", Treble: " << treble_note_range << std::endl;
 	if (bass_note_range > treble_note_range) {
-		_clef = &Score::Clef::bass_clef;
+		_clef = &Engrave::Clef::bass_clef;
 	} else {
-		_clef = &Score::Clef::treble_clef;
+		_clef = &Engrave::Clef::treble_clef;
 	}
 
 	update_bars();
