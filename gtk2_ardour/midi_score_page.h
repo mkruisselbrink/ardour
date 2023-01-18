@@ -64,7 +64,6 @@ private:
     Engrave::RenderContext _render_context;
 
 	std::unique_ptr<Engrave::StaffLineSet> _staff_lines;
-
 };
 
 #endif // __gtk_ardour_midi_score_page_h__

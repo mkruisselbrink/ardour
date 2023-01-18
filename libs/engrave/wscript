@@ -31,6 +31,7 @@ engrave_sources = [
     'glyph.cc',
     'glyph_item.cc',
     'key_signature.cc',
+    'pitch.cc',
     'render_context.cc',
     'staff_line_set.cc',
 ]

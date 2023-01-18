@@ -88,44 +88,28 @@ MidiScoreHeader::on_expose_event (GdkEventExpose *ev)
 
 	const Engrave::Clef *clef = _view.clef();
 	if (clef) {
-		uint8_t lowest = clef->lowest_note_on_bar();
-
 		const Engrave::KeySignature *ks = _view.key_signature();
 		if (ks) {
 			x -= 5;
 
-			std::vector<uint8_t> sharps = ks->sharps();
+			std::vector<Engrave::Step> sharps = ks->sharps();
 			std::string sharp = Engrave::GlyphAsUTF8 (Engrave::Glyph::kAccidentalSharp);
 			Cairo::TextExtents sharp_extents;
 			cr->get_text_extents (sharp, sharp_extents);
 			for (int i = sharps.size() - 1; i >= 0; --i) {
 				x -= sharp_extents.width;
-				uint8_t note = sharps[i];
-				while (note < lowest) {
-					note += 12;
-				}
-				int pos = clef->position_for_note (note);
-				if (pos < clef->key_signature_sharp_offset) {
-					pos += 7;
-				}
+				int pos = clef->position_for_step (sharps[i], /*for_sharp=*/true);
 				cr->move_to (x, bottom_line - line_distance / 2 * pos);
 				cr->show_text (sharp);
 			}
 
-			std::vector<uint8_t> flats = ks->flats();
+			std::vector<Engrave::Step> flats = ks->flats();
 			std::string flat = Engrave::GlyphAsUTF8 (Engrave::Glyph::kAccidentalFlat);
 			Cairo::TextExtents flat_extents;
 			cr->get_text_extents (flat, flat_extents);
 			for (int i = flats.size() - 1; i >= 0; --i) {
 				x -= flat_extents.width;
-				uint8_t note = flats[i];
-				while (note < lowest) {
-					note += 12;
-				}
-				int pos = clef->position_for_note (note);
-				if (pos < clef->key_signature_flat_offset) {
-					pos += 7;
-				}
+				int pos = clef->position_for_step (flats[i], /*for_sharp=*/false);
 				cr->move_to (x, bottom_line - line_distance / 2 * pos);
 				cr->show_text (flat);
 			}

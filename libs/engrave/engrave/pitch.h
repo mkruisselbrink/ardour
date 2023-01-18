@@ -16,60 +16,39 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef ENGRAVE_TYPES_H_
-#define ENGRAVE_TYPES_H_
+#ifndef ENGRAVE_PITCH_H_
+#define ENGRAVE_PITCH_H_
 
-#include <cassert>
-#include <cstdint>
-#include <vector>
+#include "engrave/types.h"
 
 namespace Engrave {
 
-enum class Accidental { kNone, kNatural, kSharp, kFlat };
+// Octave 4 starts with middle C (i.e. midi note 60 would be octave=4,step=0,alter=0).
+class Pitch {
+public:
+	constexpr Pitch() : Pitch (4, Step::C, 0) {}
+	constexpr Pitch (int octave, Step step, int alter = 0) : _octave (octave), _step (step), _alter (alter) {}
 
-enum class Scale { kMajor, kMinor };
+	int octave() const { return _octave; }
+	Step step() const { return _step; }
+	int alter() const { return _alter; }
 
-enum class Step {
-	C = 0,
-	D = 1,
-	E = 2,
-	F = 3,
-	G = 4,
-	A = 5,
-	B = 6,
+	uint8_t midi_note() const;
+
+	Pitch add_octaves (int octave_delta) const { return Pitch (_octave + octave_delta, _step, _alter); }
+
+private:
+	int _octave;
+	Step _step;
+	int _alter;
 };
 
 inline int
-alter_for_accidental (Accidental a)
+operator- (const Pitch &a, const Pitch &b)
 {
-	switch (a) {
-	case Accidental::kNone:
-	case Accidental::kNatural:
-		return 0;
-	case Accidental::kSharp:
-		return 1;
-	case Accidental::kFlat:
-		return -1;
-	}
-	assert (false);
-	return 0;
-}
-
-inline Accidental
-accidental_from_alter (int alter, Accidental treat_zero_as = Accidental::kNatural)
-{
-	switch (alter) {
-	case -1:
-		return Accidental::kFlat;
-	case 0:
-		return treat_zero_as;
-	case 1:
-		return Accidental::kSharp;
-	}
-	assert (false);
-	return Accidental::kNone;
+	return (static_cast<int> (a.step()) + a.octave() * 7) - (static_cast<int> (b.step()) + b.octave() * 7);
 }
 
 } // namespace Engrave
 
-#endif // ENGRAVE_TYPES_H_
+#endif // ENGRAVE_PITCH_H_

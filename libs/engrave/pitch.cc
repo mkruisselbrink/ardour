@@ -16,60 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef ENGRAVE_TYPES_H_
-#define ENGRAVE_TYPES_H_
+#include "engrave/pitch.h"
 
-#include <cassert>
-#include <cstdint>
-#include <vector>
+#include "engrave/key_signature.h"
 
 namespace Engrave {
 
-enum class Accidental { kNone, kNatural, kSharp, kFlat };
-
-enum class Scale { kMajor, kMinor };
-
-enum class Step {
-	C = 0,
-	D = 1,
-	E = 2,
-	F = 3,
-	G = 4,
-	A = 5,
-	B = 6,
-};
-
-inline int
-alter_for_accidental (Accidental a)
+uint8_t
+Pitch::midi_note() const
 {
-	switch (a) {
-	case Accidental::kNone:
-	case Accidental::kNatural:
-		return 0;
-	case Accidental::kSharp:
-		return 1;
-	case Accidental::kFlat:
-		return -1;
-	}
-	assert (false);
-	return 0;
-}
-
-inline Accidental
-accidental_from_alter (int alter, Accidental treat_zero_as = Accidental::kNatural)
-{
-	switch (alter) {
-	case -1:
-		return Accidental::kFlat;
-	case 0:
-		return treat_zero_as;
-	case 1:
-		return Accidental::kSharp;
-	}
-	assert (false);
-	return Accidental::kNone;
+	static constexpr uint8_t scale[7] = { 0, 2, 4, 5, 7, 9, 11 };
+	uint8_t note = scale[static_cast<int> (_step)] + 12 * (_octave + 1);
+	return note + _alter;
 }
 
 } // namespace Engrave
-
-#endif // ENGRAVE_TYPES_H_

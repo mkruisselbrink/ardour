@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "engrave/types.h"
+#include "engrave/pitch.h"
 
 namespace Engrave {
 
@@ -40,25 +41,27 @@ public:
 	// Number of sharps or flats as passed in.
 	int flats_or_sharps_count() const;
 
-	// Base-octave midi notes for all the notes with sharps in this key signature. For example if F# is one, this
-	// would return F.
-	std::vector<uint8_t> sharps() const;
+	const std::vector<Step>& sharps() const {
+		return _sharps;
+	}
+	
 	// Same but for flats.
-	std::vector<uint8_t> flats() const;
+	const std::vector<Step>& flats() const {
+		return _flats;
+	}
 
-	// Given a midi note `note`, returns the natural note to render as well as any accidentals to render in this
-	// key signature.
-	struct NoteAndAccidentals
-	{
-		uint8_t note = 0;
-		Accidental accidental = Accidental::kNone;
-	};
-	NoteAndAccidentals note_and_accidentals_to_render (uint8_t note) const;
+	Pitch pitch_from_midi_note (uint8_t midi_note) const;
+
+	int alter_for_step(Step s) const;
+	
+	Accidental accidental_from_pitch (const Pitch& p) const;
 
 private:
 	int _flats_or_sharps;
 	Scale _scale;
-	NoteAndAccidentals _notes[12];
+	std::vector<Step> _sharps;
+	std::vector<Step> _flats;
+	Pitch _pitches[12];
 };
 
 } // namespace Engrave

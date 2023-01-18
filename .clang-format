@@ -1,6 +1,6 @@
 BasedOnStyle: GNU
 AccessModifierOffset: -8
-AllowShortFunctionsOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Inline
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterCaseLabel:  false
@@ -21,6 +21,7 @@ BraceWrapping:
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
+AlwaysBreakAfterReturnType: TopLevel
 ColumnLimit: 119
 IndentWidth: 8
 NamespaceIndentation: Inner

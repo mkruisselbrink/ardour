@@ -96,6 +96,24 @@ Clef::position_for_note (uint8_t note) const
 }
 
 int
+Clef::position_for_step (Step s, bool for_sharp) const
+{
+	int line_offset = static_cast<int> (s) - static_cast<int> (clef_pitch.step());
+	int position = clef_position + line_offset - 7;
+	int min_pos = for_sharp ? key_signature_sharp_offset : key_signature_flat_offset;
+	while (position < min_pos) {
+		position += 7;
+	}
+	return position;
+}
+
+int
+Clef::position_for_pitch (const Pitch &p) const
+{
+	return (p - clef_pitch) + clef_position;
+}
+
+int
 Clef::notes_on_bar (uint8_t note_min, uint8_t note_max) const
 {
 	// note_min below bar:
@@ -110,8 +128,8 @@ Clef::notes_on_bar (uint8_t note_min, uint8_t note_max) const
 	return std::min (pos_max, 8) - std::max (pos_min, 0) + 1;
 }
 
-Clef Clef::treble_clef = Clef{ "Treble", Glyph::kGClef, 2, 67, 3, 1 };
-Clef Clef::bass_clef = Clef{ "Bass", Glyph::kFClef, 6, 53, 1, 0 };
+Clef Clef::treble_clef = Clef{ "Treble", Glyph::kGClef, 2, 67, Pitch (4, Step::G), 3, 1 };
+Clef Clef::bass_clef = Clef{ "Bass", Glyph::kFClef, 6, 53, Pitch (3, Step::F), 1, 0 };
 
 Clef *g_clefs[] = { &Clef::treble_clef, &Clef::bass_clef, nullptr };
 

@@ -18,6 +18,7 @@
 
 #include "engrave/key_signature.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstdlib>
 
@@ -28,68 +29,37 @@ namespace {
 	constexpr uint8_t kSharpOffset = 7;
 	constexpr uint8_t kFirstFlat = 11; // B
 	constexpr uint8_t kFlatOffset = 5;
-
-	bool
-	is_natural (uint8_t note)
-	{
-		note = note % 12;
-		return note == 0 || note == 2 || note == 4 || note == 5 || note == 7 || note == 9 || note == 11;
-	}
-
-	namespace N {
-		using Ac = Accidental;
-		using NAA = KeySignature::NoteAndAccidentals;
-		constexpr NAA C{ 0, Ac::kNone };
-		constexpr NAA Cn{ 0, Ac::kNatural };
-		constexpr NAA Cs{ 0, Ac::kSharp };
-		constexpr NAA Db{ 2, Ac::kFlat };
-		constexpr NAA D{ 2, Ac::kNone };
-		constexpr NAA Dn{ 2, Ac::kNatural };
-		constexpr NAA Ds{ 2, Ac::kSharp };
-		constexpr NAA Eb{ 4, Ac::kFlat };
-		constexpr NAA E{ 4, Ac::kNone };
-		constexpr NAA En{ 4, Ac::kNatural };
-		constexpr NAA F{ 5, Ac::kNone };
-		constexpr NAA Fn{ 5, Ac::kNatural };
-		constexpr NAA Fs{ 5, Ac::kSharp };
-		constexpr NAA Gb{ 7, Ac::kFlat };
-		constexpr NAA G{ 7, Ac::kNone };
-		constexpr NAA Gn{ 7, Ac::kNatural };
-		constexpr NAA Gs{ 7, Ac::kSharp };
-		constexpr NAA Ab{ 9, Ac::kFlat };
-		constexpr NAA A{ 9, Ac::kNone };
-		constexpr NAA An{ 9, Ac::kNatural };
-		constexpr NAA As{ 9, Ac::kSharp };
-		constexpr NAA Bb{ 11, Ac::kFlat };
-		constexpr NAA B{ 11, Ac::kNone };
-		constexpr NAA Bn{ 11, Ac::kNatural };
-	}
-	using namespace N;
-	// TODO: this doesn't need to be hardcoded
-	constexpr KeySignature::NoteAndAccidentals kScales[15][12] = {
-		/*Cb*/ { Cn, D, Dn, E, F, Fn, G, Gn, A, An, B, C }, // Fb
-		/*Gb*/ { Cn, D, Dn, E, En, F, G, Gn, A, An, B, C }, // Cb
-		/*Db*/ { C, D, Dn, E, En, F, G, Gn, A, An, B, Bn }, // Gb
-		/*Ab*/ { C, D, Dn, E, En, F, Gb, G, A, An, B, Bn }, // Db
-		/*Eb*/ { C, Db, D, E, En, F, Gb, G, A, An, B, Bn }, // Ab
-		/*Bb*/ { C, Db, D, E, En, F, Gb, G, Ab, A, B, Bn }, // Eb
-		/*F */ { C, Db, D, Eb, E, F, Gb, G, Ab, A, B, Bn }, // Bb
-		/*C */ { C, Cs, D, Eb, E, F, Fs, G, Ab, A, Bb, B },
-		/*G */ { C, Cs, D, Ds, E, Fn, F, G, Gs, A, As, B }, // F#
-		/*D */ { Cn, C, D, Ds, E, Fn, F, G, Gs, A, As, B }, // C#
-		/*A */ { Cn, C, D, Ds, E, Fn, F, Gn, G, A, As, B }, // G#
-		/*E */ { Cn, C, Dn, D, E, Fn, F, Gn, G, A, As, B }, // D#
-		/*B */ { Cn, C, Dn, D, E, Fn, F, Gn, G, An, A, B }, // A#
-		/*F#*/ { Cn, C, Dn, D, En, E, F, Gn, G, An, A, B }, // E#
-		/*C#*/ { B, C, Dn, D, En, E, F, Gn, G, An, A, Bn }, // B#
-	};
 }
 
 KeySignature::KeySignature (int flats_or_sharps, Scale scale) : _flats_or_sharps (flats_or_sharps), _scale (scale)
 {
 	assert (-7 <= flats_or_sharps && flats_or_sharps <= 7);
-	for (int i = 0; i != 12; ++i) {
-		_notes[i] = kScales[flats_or_sharps + 7][i];
+
+	static constexpr uint8_t major_scale[7] = { 0, 2, 4, 5, 7, 9, 11 };
+	for (int i = 0; i < 7; ++i) {
+		_pitches[major_scale[i]] = Pitch (4, static_cast<Step> (i), 0);
+	}
+	static constexpr Step kOrderedSharps[7] = { Step::F, Step::C, Step::G, Step::D, Step::A, Step::E, Step::B };
+	static constexpr Step kOrderedFlats[7] = { Step::B, Step::E, Step::A, Step::D, Step::G, Step::C, Step::F };
+
+	_sharps.assign (kOrderedSharps, kOrderedSharps + std::max (0, _flats_or_sharps));
+	_flats.assign (kOrderedFlats, kOrderedFlats - std::min (0, _flats_or_sharps));
+
+	const Step *src = _flats_or_sharps < 0 ? kOrderedFlats : kOrderedSharps;
+	int alter = _flats_or_sharps < 0 ? -1 : 1;
+	// TODO: 5/6/7 flats/sharps if flats or sharps, 3 of both if C-major
+	for (int i = 0; i < std::max (5, std::abs (_flats_or_sharps)); ++i) {
+		int octave = 4;
+		int n = major_scale[static_cast<int> (src[i])] + alter;
+		if (n < 0) {
+			n += 12;
+			octave++;
+		}
+		if (n > 11) {
+			n -= 12;
+			octave--;
+		}
+		_pitches[n] = Pitch (octave, src[i], alter);
 	}
 }
 
@@ -105,58 +75,32 @@ KeySignature::flats_or_sharps_count() const
 	return _flats_or_sharps;
 }
 
-std::vector<uint8_t>
-KeySignature::sharps() const
+Pitch
+KeySignature::pitch_from_midi_note (uint8_t midi_note) const
 {
-	if (_flats_or_sharps <= 0) {
-		return {};
-	}
-	std::vector<uint8_t> result;
-	uint8_t note = kFirstSharp;
-	for (int i = 0; i < _flats_or_sharps; ++i) {
-		result.push_back (note);
-		note = (note + kSharpOffset) % 12;
-	}
-	return result;
+	int octave = (midi_note / 12) - 5;
+	return _pitches[midi_note % 12].add_octaves (octave);
 }
 
-std::vector<uint8_t>
-KeySignature::flats() const
+int
+KeySignature::alter_for_step (Step s) const
 {
-	if (_flats_or_sharps >= 0) {
-		return {};
+	if (std::find (_sharps.begin(), _sharps.end(), s) != _sharps.end()) {
+		return 1;
 	}
-	std::vector<uint8_t> result;
-	uint8_t note = kFirstFlat;
-	for (int i = 0; i < -_flats_or_sharps; ++i) {
-		result.push_back (note);
-		note = (note + kFlatOffset) % 12;
+	if (std::find (_flats.begin(), _flats.end(), s) != _flats.end()) {
+		return -1;
 	}
-	return result;
+	return 0;
 }
 
-KeySignature::NoteAndAccidentals
-KeySignature::note_and_accidentals_to_render (uint8_t note) const
+Accidental
+KeySignature::accidental_from_pitch (const Pitch &p) const
 {
-	NoteAndAccidentals result = _notes[note % 12];
-	// Make sure we're int he right octave.
-	result.note += (note / 12) * 12;
-	// Wrapping around could get us off-by-one, so correct for that.
-	if (result.note > note + 1) {
-		if (result.note > 12) {
-			result.note -= 12;
-		} else {
-			// TODO: maybe not used unsigned 8-bit ints for notes
-			// This must be note 0 trying to be rendered as note -1. Instead render as a C
-			// with a natural accidental.
-			result.note = 0;
-			result.accidental = Accidental::kNatural;
-		}
+	if (alter_for_step (p.step()) == p.alter()) {
+		return Accidental::kNone;
 	}
-	if (result.note < note - 1) {
-		result.note += 12;
-	}
-	return result;
+	return accidental_from_alter(p.alter());
 }
 
 } // namespace Engrave

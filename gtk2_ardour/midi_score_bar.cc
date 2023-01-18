@@ -19,8 +19,8 @@
 #include "midi_score_bar.h"
 
 #include "engrave/clef.h"
-#include "engrave/key_signature.h"
 #include "engrave/glyph.h"
+#include "engrave/key_signature.h"
 
 #include "midi_score_streamview.h"
 
@@ -170,12 +170,15 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 		std::vector<Chord> chords;
 		for (const auto &np : _notes) {
 			PosAndAcc pa;
-			auto note_to_render = ks->note_and_accidentals_to_render (np.note->note());
-			pa.position = clef ? clef->position_for_note (note_to_render.note) : 4;
+			// auto note_to_render = ks->note_and_accidentals_to_render (np.note->note());
+			Engrave::Pitch pitch = ks->pitch_from_midi_note (np.note->note());
+			pa.position = clef ? clef->position_for_pitch (pitch) : 4;
 			// go from "something" to "none" is problematic
+            // TODO: accidentals
+            Accidental pitch_a = ks->accidental_from_pitch(pitch);
 			Accidental &a = accidentals[pa.position];
-			if (a != note_to_render.accidental) {
-				a = note_to_render.accidental;
+			if (a != pitch_a) {
+				a = pitch_a;
 				if (a == Accidental::kNone) {
 					// Going from something to none means we're going back to the key signature.
 					// That means we do need an accidental.
@@ -352,8 +355,8 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 
 					if (note_shape->flag_count) {
 						Engrave::Glyph flag_g = note_shape->flag_count == 1
-						                          ? Engrave::Glyph::kFlag8thDown
-						                          : Engrave::Glyph::kFlag16thDown;
+						                            ? Engrave::Glyph::kFlag8thDown
+						                            : Engrave::Glyph::kFlag16thDown;
 						cr->move_to (x + stemx - 0.5 * stem_width,
 						             bottom_y + stem_length * ld);
 						std::string flag_s = Engrave::GlyphAsUTF8 (flag_g);
@@ -367,8 +370,8 @@ MidiScoreBar::render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Conte
 
 					if (note_shape->flag_count) {
 						Engrave::Glyph flag_g = note_shape->flag_count == 1
-						                          ? Engrave::Glyph::kFlag8thUp
-						                          : Engrave::Glyph::kFlag16thUp;
+						                            ? Engrave::Glyph::kFlag8thUp
+						                            : Engrave::Glyph::kFlag16thUp;
 						cr->move_to (x + stemx - 0.5 * stem_width, top_y - stem_length * ld);
 						std::string flag_s = Engrave::GlyphAsUTF8 (flag_g);
 						cr->show_text (flag_s);

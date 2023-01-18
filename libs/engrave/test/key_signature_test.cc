@@ -67,88 +67,100 @@ TEST (KeySignatureTest, baseNote)
 	EXPECT_EQ (Notes::Cs, KeySignature (7).base_note());
 }
 
-TEST (KeySignatureTest, sharpsOrFlats)
+TEST (KeySignatureTest, sharps)
 {
-	KeySignature ks0 (0, Scale::kMajor);
+	KeySignature ks0 (0);
 	EXPECT_TRUE (ks0.sharps().empty());
+
+	KeySignature ks3 (3, Scale::kMinor);
+	ASSERT_EQ (3, ks3.sharps().size());
+	EXPECT_EQ (Step::F, ks3.sharps()[0]);
+	EXPECT_EQ (Step::C, ks3.sharps()[1]);
+	EXPECT_EQ (Step::G, ks3.sharps()[2]);
+
+	KeySignature ks7 (7);
+	ASSERT_EQ (7, ks7.sharps().size());
+	EXPECT_EQ (Step::F, ks7.sharps()[0]);
+	EXPECT_EQ (Step::C, ks7.sharps()[1]);
+	EXPECT_EQ (Step::G, ks7.sharps()[2]);
+	EXPECT_EQ (Step::D, ks7.sharps()[3]);
+	EXPECT_EQ (Step::A, ks7.sharps()[4]);
+	EXPECT_EQ (Step::E, ks7.sharps()[5]);
+	EXPECT_EQ (Step::B, ks7.sharps()[6]);
+
+	KeySignature ks2f (-2);
+	EXPECT_TRUE (ks2f.sharps().empty());
+}
+
+TEST (KeySignatureTest, flats)
+{
+	KeySignature ks0 (0);
 	EXPECT_TRUE (ks0.flats().empty());
 
-	KeySignature ks7b (-7, Scale::kMinor);
-	EXPECT_TRUE (ks7b.sharps().empty());
-	EXPECT_EQ (size_t{ 7 }, ks7b.flats().size());
-	EXPECT_EQ (Notes::B, ks7b.flats()[0]);
-	EXPECT_EQ (Notes::E, ks7b.flats()[1]);
-	EXPECT_EQ (Notes::A, ks7b.flats()[2]);
-	EXPECT_EQ (Notes::D, ks7b.flats()[3]);
-	EXPECT_EQ (Notes::G, ks7b.flats()[4]);
-	EXPECT_EQ (Notes::C, ks7b.flats()[5]);
-	EXPECT_EQ (Notes::F, ks7b.flats()[6]);
+	KeySignature ks4 (-4);
+	ASSERT_EQ (4, ks4.flats().size());
+	EXPECT_EQ (Step::B, ks4.flats()[0]);
+	EXPECT_EQ (Step::E, ks4.flats()[1]);
+	EXPECT_EQ (Step::A, ks4.flats()[2]);
+	EXPECT_EQ (Step::D, ks4.flats()[3]);
 
-	KeySignature ks7s (7, Scale::kMajor);
-	EXPECT_TRUE (ks7s.flats().empty());
-	EXPECT_EQ (size_t{ 7 }, ks7s.sharps().size());
-	EXPECT_EQ (Notes::F, ks7s.sharps()[0]);
-	EXPECT_EQ (Notes::C, ks7s.sharps()[1]);
-	EXPECT_EQ (Notes::G, ks7s.sharps()[2]);
-	EXPECT_EQ (Notes::D, ks7s.sharps()[3]);
-	EXPECT_EQ (Notes::A, ks7s.sharps()[4]);
-	EXPECT_EQ (Notes::E, ks7s.sharps()[5]);
-	EXPECT_EQ (Notes::B, ks7s.sharps()[6]);
+	KeySignature ks7 (-7, Scale::kMinor);
+	ASSERT_EQ (7, ks7.flats().size());
+	EXPECT_EQ (Step::B, ks7.flats()[0]);
+	EXPECT_EQ (Step::E, ks7.flats()[1]);
+	EXPECT_EQ (Step::A, ks7.flats()[2]);
+	EXPECT_EQ (Step::D, ks7.flats()[3]);
+	EXPECT_EQ (Step::G, ks7.flats()[4]);
+	EXPECT_EQ (Step::C, ks7.flats()[5]);
+	EXPECT_EQ (Step::F, ks7.flats()[6]);
+
+	KeySignature ks2s (2);
+	EXPECT_TRUE (ks2s.flats().empty());
 }
 
-TEST (KeySignatureTest, noteAndAccidentalsToRender)
+TEST (KeySignatureTest, pitch_correctOctaveAndMidiNote)
 {
-	constexpr uint8_t scale[7] = { 0, 2, 4, 5, 7, 9, 11 };
-	// Notes in the scale should all render without accidentals
 	for (int s_or_f = -7; s_or_f <= 7; s_or_f++) {
-		KeySignature ks (s_or_f);
-		for (int oct = 0; oct < 9; oct++) {
-			for (uint8_t scale_note : scale) {
-				uint8_t note = ks.base_note() + oct * 12 + scale_note;
-				EXPECT_EQ (Accidental::kNone, ks.note_and_accidentals_to_render (note).accidental);
-			}
-		}
-	}
-
-	// Natural notes should always render without accidentals or with natural accidentals.
-	// Depending on key signature it is possible for these to be rendered as a different note though (for
-	// example an F in a key signature with an E-sharp).
-	for (int s_or_f = -7; s_or_f <= 7; s_or_f++) {
-		KeySignature ks (s_or_f);
-		for (int oct = 0; oct < 10; oct++) {
-			for (uint8_t scale_note : scale) {
-				uint8_t note = oct * 12 + scale_note;
-				auto a = ks.note_and_accidentals_to_render (note).accidental;
-				EXPECT_TRUE (a == Accidental::kNone || a == Accidental::kNatural);
-			}
-		}
-	}
-
-	// If accidental is a sharp, note to render should be one lower than note, and vice versa for flats.
-	for (int s_or_f = -7; s_or_f <= 7; s_or_f++) {
+		SCOPED_TRACE (s_or_f);
 		KeySignature ks (s_or_f);
 		for (uint8_t note = 0; note <= 120; ++note) {
-			auto na = ks.note_and_accidentals_to_render (note);
-			switch (na.accidental) {
-			case Accidental::kNatural:
-				EXPECT_EQ (note, na.note);
-				break;
-			case Accidental::kFlat:
-				EXPECT_EQ (note + 1, int{ na.note });
-				break;
-			case Accidental::kSharp:
-				EXPECT_EQ (note - 1, int{ na.note });
-				break;
-			case Accidental::kNone:
-				// Could be same, higher, or lower. But always at most one
-				// difference.
-				EXPECT_LE (std::abs (na.note - note), 1);
-				break;
-			}
+			SCOPED_TRACE (int{note});
+			Pitch p = ks.pitch_from_midi_note (note);
+			int expected_octave = note / 12 - 1;
+			if (p.step() == Step::C && p.alter() == -1) expected_octave++;
+			if (p.step() == Step::B && p.alter() == 1) expected_octave--;
+			EXPECT_EQ (expected_octave, p.octave());
+			EXPECT_EQ (note, p.midi_note());
 		}
 	}
-
-	// TODO: Check consistency with `sharps` and `flats`
 }
+
+TEST (KeySignatureTest, pitch_consistentWithSharps)
+{
+	for (int s = 1; s <= 7; ++s) {
+		SCOPED_TRACE (s);
+		KeySignature ks (s);
+		for (uint8_t note = 0; note <= 120; ++note) {
+			Pitch p = ks.pitch_from_midi_note (note);
+			EXPECT_TRUE(p.alter() == 0 || p.alter() == 1);
+		}
+	}
+}
+
+TEST (KeySignatureTest, pitch_consistentWithFlats)
+{
+	for (int s = 1; s <= 7; ++s) {
+		SCOPED_TRACE (s);
+		KeySignature ks (-s);
+		for (uint8_t note = 0; note <= 120; ++note) {
+			Pitch p = ks.pitch_from_midi_note (note);
+			EXPECT_TRUE(p.alter() == 0 || p.alter() == -1);
+		}
+	}
+}
+
+// TODO: accidental from pitch
+
+// TODO: alter for step
 
 } // namespace Engrave

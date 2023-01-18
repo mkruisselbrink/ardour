@@ -20,6 +20,7 @@
 #define ENGRAVE_CLEF_H_
 
 #include "engrave/glyph.h"
+#include "engrave/pitch.h"
 
 namespace Engrave {
 
@@ -30,6 +31,7 @@ struct Clef {
 	const int clef_position;
 	// midi note number at position
 	const uint8_t clef_note;
+	const Pitch clef_pitch;
 	// how low the lowest key signature sharp should be above the bottom line
 	const uint8_t key_signature_sharp_offset = 0;
 	// how low the lowest key signature flat should be above the bottom line
@@ -37,6 +39,9 @@ struct Clef {
 
 	uint8_t note_for_position (int note_pos) const;
 	int position_for_note (uint8_t note) const;
+
+	int position_for_step (Step s, bool for_sharp) const;
+	int position_for_pitch (const Pitch& p) const;
 
 	uint8_t
 	lowest_note_on_bar() const
