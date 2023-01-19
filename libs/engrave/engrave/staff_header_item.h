@@ -16,33 +16,37 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef ENGRAVE_GLYPH_ITEM_H_
-#define ENGRAVE_GLYPH_ITEM_H_
+#ifndef ENGRAVE_STAFF_HEADER_ITEM_H_
+#define ENGRAVE_STAFF_HEADER_ITEM_H_
 
-#include "canvas/item.h"
-#include "engrave/glyph.h"
+#include "canvas/container.h"
+#include "engrave/clef.h"
+#include "engrave/key_signature.h"
+#include "engrave/time_signature.h"
 
 namespace Engrave {
 
 class RenderContext;
 
-class GlyphItem : public ArdourCanvas::Item {
+class StaffHeaderItem : public ArdourCanvas::Container {
 public:
-	GlyphItem (const RenderContext &context, ArdourCanvas::Item *parent, Glyph glyph);
+	StaffHeaderItem (const RenderContext &context, ArdourCanvas::Item *parent);
 
-	// ArdourCanvas::Item
-	void render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Context> cr) const override;
-	void compute_bounding_box() const override;
-
-	// Should only be called during construction. Offset is in number of staff lines.
-	void set_line_offset (double offset) { _line_offset = offset; }
+	void set_clef (const Clef &clef);
+	void set_key_signature (const KeySignature &key_signature);
+    void set_time_signature(const TimeSignature& time_signature);
 
 private:
 	const RenderContext &_context;
-	std::string _text;
-	double _line_offset = 0;
+	std::unique_ptr<Clef> _clef;
+	std::unique_ptr<KeySignature> _key_signature;
+    std::unique_ptr<TimeSignature> _time_signature;
+
+	std::unique_ptr<ArdourCanvas::Item> _clef_item;
+	std::vector<std::unique_ptr<ArdourCanvas::Item> > _key_signature_items;
+	std::unique_ptr<ArdourCanvas::Item> _time_signature_item;
 };
 
 } // namespace Engrave
 
-#endif // ENGRAVE_GLYPH_ITEM_H_
+#endif // ENGRAVE_STAFF_HEADER_ITEM_H_

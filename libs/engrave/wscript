@@ -33,13 +33,17 @@ engrave_sources = [
     'key_signature.cc',
     'pitch.cc',
     'render_context.cc',
+    'staff_header_item.cc',
     'staff_line_set.cc',
+    'time_signature.cc',
+    'time_signature_item.cc',
 ]
 
 engrave_use = [
     'libardour',
     'libcanvas',
     'libpbd',
+    'temporal',
 ]
 
 engrave_uselibs = [
@@ -47,6 +51,7 @@ engrave_uselibs = [
     'CAIROMM',
     'GLIBMM',
     'GTKMM',
+    'XML',
 ]
 
 path_prefix = 'libs/engrave'

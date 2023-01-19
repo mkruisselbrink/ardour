@@ -21,6 +21,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 #include <vector>
 
 namespace Engrave {
@@ -38,6 +39,28 @@ enum class Step {
 	A = 5,
 	B = 6,
 };
+
+inline std::ostream &
+operator<< (std::ostream &os, Step s)
+{
+	switch (s) {
+	case Step::C:
+		return os << "C";
+	case Step::D:
+		return os << "D";
+	case Step::E:
+		return os << "E";
+	case Step::F:
+		return os << "F";
+	case Step::G:
+		return os << "G";
+	case Step::A:
+		return os << "A";
+	case Step::B:
+		return os << "B";
+	}
+    return os << "XXX";
+}
 
 inline int
 alter_for_accidental (Accidental a)

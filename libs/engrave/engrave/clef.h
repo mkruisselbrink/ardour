@@ -25,7 +25,7 @@
 namespace Engrave {
 
 struct Clef {
-	const char *const name;
+	const char *const name = "";
 	const Glyph glyph;
 	// 0 = bottom line, 8 = top line
 	const int clef_position;

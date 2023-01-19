@@ -39,6 +39,7 @@
 #include "engrave/glyph.h"
 #include "engrave/glyph_item.h"
 #include "engrave/staff_line_set.h"
+#include "engrave/staff_header_item.h"
 #include "gtkmm2ext/colors.h"
 
 #include "ui_config.h"
@@ -124,10 +125,16 @@ MidiScorePage::set_session (ARDOUR::Session *s)
 		std::cerr << "Name: " << midi_track->name() << std::endl;
 		auto *txt = new ArdourCanvas::Text (_v_scroll_group.get());
 		txt->set (midi_track->name());
-		txt->set_position ({ 0, y });
+		txt->set_position ({ _render_context.line_distance(), y });
 		txt->show();
 
-		auto *clef
+        auto *h = new Engrave::StaffHeaderItem(_render_context, _v_scroll_group.get());
+        h->set_clef(Engrave::Clef::treble_clef);
+        h->set_key_signature(Engrave::KeySignature(7));
+        h->set_time_signature(Engrave::TimeSignature(12, 8));
+        h->set_position({20, y});
+
+/*		auto *clef
 		    = new Engrave::ClefItem (_render_context, _v_scroll_group.get(), Engrave::Clef::treble_clef);
 		clef->set_position ({ 20, y });
 		clef = new Engrave::ClefItem (_render_context, _v_scroll_group.get(), Engrave::Clef::bass_clef);
@@ -135,7 +142,7 @@ MidiScorePage::set_session (ARDOUR::Session *s)
 
 		auto *g = new Engrave::GlyphItem (_render_context, _v_scroll_group.get(), Engrave::Glyph::kCClef);
 		g->set_position ({ 80, y - _render_context.line_distance() * 2 });
-
+*/
 		_staff_lines->add_staff (y);
 
 		y += 120;

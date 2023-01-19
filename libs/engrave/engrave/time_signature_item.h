@@ -16,33 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef ENGRAVE_GLYPH_ITEM_H_
-#define ENGRAVE_GLYPH_ITEM_H_
+#ifndef ENGRAVE_TIME_SIGNATURE_ITEM_H_
+#define ENGRAVE_TIME_SIGNATURE_ITEM_H_
 
-#include "canvas/item.h"
-#include "engrave/glyph.h"
+#include "canvas/container.h"
+#include "engrave/time_signature.h"
 
 namespace Engrave {
 
 class RenderContext;
 
-class GlyphItem : public ArdourCanvas::Item {
+class TimeSignatureItem : public ArdourCanvas::Container {
 public:
-	GlyphItem (const RenderContext &context, ArdourCanvas::Item *parent, Glyph glyph);
-
-	// ArdourCanvas::Item
-	void render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Context> cr) const override;
-	void compute_bounding_box() const override;
-
-	// Should only be called during construction. Offset is in number of staff lines.
-	void set_line_offset (double offset) { _line_offset = offset; }
+	TimeSignatureItem (const RenderContext &context, ArdourCanvas::Item *parent,
+	                   const TimeSignature &time_signature);
 
 private:
+	std::vector<std::unique_ptr<ArdourCanvas::Item> > create_items_for_number (int number, int line_offset);
+
 	const RenderContext &_context;
-	std::string _text;
-	double _line_offset = 0;
+	std::vector<std::unique_ptr<ArdourCanvas::Item> > _items;
 };
 
 } // namespace Engrave
 
-#endif // ENGRAVE_GLYPH_ITEM_H_
+#endif // ENGRAVE_TIME_SIGNATURE_ITEM_H_

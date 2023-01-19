@@ -33,7 +33,7 @@ class KeySignature
 {
 public:
 	// flats_or_sharps should be in -7 - 7, negative numbers for flats, positive for sharps
-	KeySignature (int flats_or_sharps, Scale scale = Scale::kMajor);
+	KeySignature (int flats_or_sharps = 0, Scale scale = Scale::kMajor);
 
 	// Base-octave midi note for the root of this key signature.
 	uint8_t base_note() const;
@@ -45,7 +45,6 @@ public:
 		return _sharps;
 	}
 	
-	// Same but for flats.
 	const std::vector<Step>& flats() const {
 		return _flats;
 	}
@@ -53,7 +52,7 @@ public:
 	Pitch pitch_from_midi_note (uint8_t midi_note) const;
 
 	int alter_for_step(Step s) const;
-	
+
 	Accidental accidental_from_pitch (const Pitch& p) const;
 
 private:

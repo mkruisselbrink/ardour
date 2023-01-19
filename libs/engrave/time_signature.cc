@@ -16,33 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef ENGRAVE_GLYPH_ITEM_H_
-#define ENGRAVE_GLYPH_ITEM_H_
-
-#include "canvas/item.h"
-#include "engrave/glyph.h"
+#include "engrave/time_signature.h"
 
 namespace Engrave {
 
-class RenderContext;
-
-class GlyphItem : public ArdourCanvas::Item {
-public:
-	GlyphItem (const RenderContext &context, ArdourCanvas::Item *parent, Glyph glyph);
-
-	// ArdourCanvas::Item
-	void render (const ArdourCanvas::Rect &area, Cairo::RefPtr<Cairo::Context> cr) const override;
-	void compute_bounding_box() const override;
-
-	// Should only be called during construction. Offset is in number of staff lines.
-	void set_line_offset (double offset) { _line_offset = offset; }
-
-private:
-	const RenderContext &_context;
-	std::string _text;
-	double _line_offset = 0;
-};
+TimeSignature::TimeSignature (int8_t divisions_per_bar, int8_t note_value)
+    : _divisions_per_bar (divisions_per_bar), _note_value (note_value)
+{
+}
 
 } // namespace Engrave
-
-#endif // ENGRAVE_GLYPH_ITEM_H_
