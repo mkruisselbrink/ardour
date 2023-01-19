@@ -124,11 +124,15 @@ TEST (KeySignatureTest, pitch_correctOctaveAndMidiNote)
 		SCOPED_TRACE (s_or_f);
 		KeySignature ks (s_or_f);
 		for (uint8_t note = 0; note <= 120; ++note) {
-			SCOPED_TRACE (int{note});
+			SCOPED_TRACE (int{ note });
 			Pitch p = ks.pitch_from_midi_note (note);
 			int expected_octave = note / 12 - 1;
-			if (p.step() == Step::C && p.alter() == -1) expected_octave++;
-			if (p.step() == Step::B && p.alter() == 1) expected_octave--;
+			if (p.step() == Step::C && p.alter() == -1) {
+				expected_octave++;
+			}
+			if (p.step() == Step::B && p.alter() == 1) {
+				expected_octave--;
+			}
 			EXPECT_EQ (expected_octave, p.octave());
 			EXPECT_EQ (note, p.midi_note());
 		}
@@ -142,7 +146,7 @@ TEST (KeySignatureTest, pitch_consistentWithSharps)
 		KeySignature ks (s);
 		for (uint8_t note = 0; note <= 120; ++note) {
 			Pitch p = ks.pitch_from_midi_note (note);
-			EXPECT_TRUE(p.alter() == 0 || p.alter() == 1);
+			EXPECT_TRUE (p.alter() == 0 || p.alter() == 1);
 		}
 	}
 }
@@ -154,13 +158,50 @@ TEST (KeySignatureTest, pitch_consistentWithFlats)
 		KeySignature ks (-s);
 		for (uint8_t note = 0; note <= 120; ++note) {
 			Pitch p = ks.pitch_from_midi_note (note);
-			EXPECT_TRUE(p.alter() == 0 || p.alter() == -1);
+			EXPECT_TRUE (p.alter() == 0 || p.alter() == -1);
 		}
 	}
 }
 
-// TODO: accidental from pitch
+TEST (KeySignatureTest, alterForStep)
+{
+	for (int s_or_f = -7; s_or_f <= 7; ++s_or_f) {
+		SCOPED_TRACE (s_or_f);
+		KeySignature ks (s_or_f);
+		std::vector<Step> sharps = ks.sharps();
+		std::vector<Step> flats = ks.flats();
+		for (int istep = 0; istep <= 7; ++istep) {
+			Step step = static_cast<Step> (istep);
+			int alter = ks.alter_for_step (step);
+			if (std::find (sharps.begin(), sharps.end(), step) != sharps.end()) {
+				EXPECT_EQ (alter, 1);
+			} else if (std::find (flats.begin(), flats.end(), step) != flats.end()) {
+				EXPECT_EQ (alter, -1);
+			} else {
+				EXPECT_EQ (alter, 0);
+			}
+		}
+	}
 
-// TODO: alter for step
+	KeySignature ks (3);
+	EXPECT_EQ (ks.alter_for_step (Step::C), 1);
+	EXPECT_EQ (ks.alter_for_step (Step::D), 0);
+	EXPECT_EQ (ks.alter_for_step (Step::E), 0);
+	EXPECT_EQ (ks.alter_for_step (Step::F), 1);
+	EXPECT_EQ (ks.alter_for_step (Step::G), 1);
+	EXPECT_EQ (ks.alter_for_step (Step::A), 0);
+	EXPECT_EQ (ks.alter_for_step (Step::B), 0);
+}
+
+TEST (KeySignatureTest, accidentalFromPitch)
+{
+	KeySignature ks (-2);
+	EXPECT_EQ (ks.accidental_from_pitch (Pitch (3, Step::C)), Accidental::kNone);
+	EXPECT_EQ (ks.accidental_from_pitch (Pitch (4, Step::C, 1)), Accidental::kSharp);
+	EXPECT_EQ (ks.accidental_from_pitch (Pitch (4, Step::D)), Accidental::kNone);
+	EXPECT_EQ (ks.accidental_from_pitch (Pitch (4, Step::D, -1)), Accidental::kFlat);
+	EXPECT_EQ (ks.accidental_from_pitch (Pitch (2, Step::E)), Accidental::kNatural);
+	EXPECT_EQ (ks.accidental_from_pitch (Pitch (2, Step::E, -1)), Accidental::kNone);
+}
 
 } // namespace Engrave
